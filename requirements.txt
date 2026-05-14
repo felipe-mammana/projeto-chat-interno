@@ -1,0 +1,4 @@
+bcrypt>=4.1.0
+mysql-connector-python>=9.0.0
+pywebview>=4.4
+rapidfuzz>=3.6.0

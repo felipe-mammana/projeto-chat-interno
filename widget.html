@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <style>
+        * {
+            cursor: default;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-app-region: no-drag; 
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        html, body, .chat-widget-container {
+            background: transparent !important;
+        }
+
+        html, body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .chat-widget-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            content-visibility: auto;
+        }
+
+
+
+        .chat-widget-btn {
+            width: 60px;
+            height: 60px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #0052CC 0%, #0078D4 25%, #0098FF 50%, #00D4FF 100%);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(0, 82, 204, 0.4),
+                        0 2px 8px rgba(0, 152, 255, 0.2),
+                        inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+            outline: none;
+            animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: visible;
+            will-change: transform, opacity;
+            transform: translateZ(0);
+        }
+
+        .chat-widget-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 152, 255, 0.4), transparent);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .chat-widget-btn:hover {
+            transform: scale(1.15) translateZ(0);
+            box-shadow: 0 12px 40px rgba(0, 82, 204, 0.5),
+                        0 4px 12px rgba(0, 212, 255, 0.4),
+                        inset 0 1px 2px rgba(255, 255, 255, 0.4);
+        }
+
+        .chat-widget-btn:hover::after {
+            opacity: 1;
+        }
+
+        .chat-widget-btn:active {
+            transform: scale(0.92) translateZ(0);
+        }
+
+        .chat-widget-btn svg {
+            position: relative;
+            z-index: 1;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(80px) scale(0.6) translateZ(0);
+            }
+            70% {
+                transform: translateY(-6px) scale(1.03) translateZ(0);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1) translateZ(0);
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="chat-widget-container">
+        <button class="chat-widget-btn" id="open-chat-btn" title="Abrir Chat">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        const OPEN_COOLDOWN_MS = 1000;
+        let opening = false;
+        let readyNotified = false;
+
+        // ✨ Notifica o Python quando o widget estiver completamente carregado (única vez)
+        function notifyReady() {
+            if (readyNotified) return;
+            readyNotified = true;
+            console.log("🎨 Widget totalmente carregado");
+            if (window.pywebview?.api?.widget_ready) {
+                window.pywebview.api.widget_ready();
+            }
+        }
+
+        // Inicializa quando o DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('open-chat-btn');
+
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+
+                if (opening) {
+                    console.log("⛔ Já está abrindo o chat...");
+                    return;
+                }
+
+                opening = true;
+                console.log("✅ Widget clicado, abrindo chat...");
+
+                if (window.pywebview?.api?.open_chat) {
+                    window.pywebview.api.open_chat();
+                }
+
+                // Reset após cooldown para permitir novo clique
+                setTimeout(() => {
+                    opening = false;
+                }, OPEN_COOLDOWN_MS);
+            });
+
+            // Notifica no primeiro frame disponível
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(notifyReady); // 3 frames = ~50ms garante compositor
+    });
+});
+});
+    </script>
+</body>
+</html>

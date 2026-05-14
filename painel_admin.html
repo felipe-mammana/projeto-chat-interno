@@ -1,0 +1,4600 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClínicaApp - Painel Administrativo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-light: #f5f7fa;
+            --bg-lighter: #e8ecf1;
+            --blue-deep: #1e3a8a;
+            --blue-primary: #1e40af;
+            --blue-light: #3b82f6;
+            --blue-lighter: #60a5fa;
+            --emerald: #10b981;
+            --emerald-dark: #059669;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-bg-dark: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(30, 58, 138, 0.1);
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            
+            /* Novos tokens */
+            --shadow-sm: 0 2px 8px rgba(30, 58, 138, 0.1);
+            --shadow-md: 0 4px 16px rgba(30, 58, 138, 0.15);
+            --shadow-lg: 0 12px 32px rgba(30, 58, 138, 0.2);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --transition-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            
+            /* Superfícies */
+            --surface-1: #ffffff;
+            --surface-2: rgba(255, 255, 255, 0.75);
+            --surface-3: rgba(255, 255, 255, 0.5);
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-lighter) 100%);
+            color: var(--text-primary);
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle, rgba(30, 58, 138, 0.08) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: 0 0;
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse 600px 600px at 5% 10%, rgba(30, 58, 138, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse 700px 700px at 95% 95%, rgba(16, 185, 129, 0.06) 0%, transparent 50%);
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .global-loading {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(245, 247, 250, 0.85);
+            backdrop-filter: blur(6px);
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            flex-direction: column;
+        }
+
+        .global-loading.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .global-loading .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(30, 58, 138, 0.15);
+            border-top-color: var(--blue-primary);
+            border-radius: 50%;
+            animation: breathe 1.5s ease-in-out infinite;
+        }
+
+        .global-loading .label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+
+        @keyframes dotDot {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* HEADER TOP BAR */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 280px;
+            right: 0;
+            height: 74px;
+            background: var(--glass-bg-dark);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 100;
+            box-shadow: var(--shadow-md);
+        }
+
+        .top-bar-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+
+        .top-bar-icon {
+            font-size: 28px;
+            filter: drop-shadow(0 2px 4px rgba(30, 58, 138, 0.2));
+        }
+
+        .top-bar-title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .top-bar-title {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--blue-deep) 0%, var(--blue-primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .top-bar-separator {
+            width: 1px;
+            height: 32px;
+            background: var(--glass-border);
+        }
+
+        .top-bar-breadcrumb {
+            font-size: 13px;
+            color: var(--text-muted);
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+
+        @media (min-width: 1200px) {
+            .top-bar-breadcrumb { display: flex; }
+        }
+
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-left: auto;
+        }
+
+        .top-bar-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--blue-deep) 0%, var(--blue-primary) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: var(--shadow-sm);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s var(--transition-spring);
+        }
+
+        .top-bar-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-voltar {
+            padding: 10px 20px !important;
+            font-size: 14px !important;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s var(--transition-spring);
+        }
+
+        .btn-voltar:hover {
+            transform: translateX(-4px);
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 280px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            box-shadow: 4px 0 24px rgba(30, 58, 138, 0.1);
+            animation: slideInLeft 0.5s ease-out;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 99;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--blue-primary) 0%, var(--blue-light) 100%);
+            border-radius: 3px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar:hover::-webkit-scrollbar-thumb {
+            opacity: 1;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar-header {
+            padding: 24px 16px;
+            background: linear-gradient(135deg, var(--blue-deep) 0%, var(--blue-primary) 100%);
+            text-align: center;
+            position: relative;
+            overflow: visible;
+            border-radius: 0 0 20px 0;
+        }
+
+        .sidebar-logo {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 12px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar-header h2 {
+            font-size: 13px;
+            font-weight: 700;
+            color: white;
+            position: relative;
+            z-index: 1;
+            letter-spacing: 0.3px;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .sidebar-version {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            position: relative;
+            z-index: 1;
+            letter-spacing: 0.3px;
+            padding-top: 6px;
+            border-top: none;
+        }
+
+        .nav-section {
+            padding: 20px 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .nav-section:last-child {
+            border-bottom: none;
+            flex: 1;
+        }
+
+        .nav-section-title {
+            padding: 12px 24px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            position: relative;
+        }
+
+        .nav-section-title::after {
+            content: '';
+            display: block;
+            position: absolute;
+            bottom: 0;
+            left: 24px;
+            right: 24px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, var(--glass-border) 50%, transparent 100%);
+            width: 0;
+            transition: width 0.4s var(--transition-spring);
+            margin-top: 8px;
+        }
+
+        .nav-section-title:hover::after {
+            width: 100%;
+        }
+
+        .nav-item {
+            padding: 14px 24px;
+            cursor: pointer;
+            transition: all 0.3s var(--transition-spring);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: var(--text-secondary);
+            position: relative;
+            margin: 4px 12px;
+            border-radius: var(--radius-md);
+            will-change: transform, background-color;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--blue-primary);
+            border-radius: 0 2px 2px 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-item:hover {
+            background: rgba(30, 58, 138, 0.08);
+            color: var(--blue-primary);
+        }
+
+        .nav-item:hover .nav-icon {
+            transform: scale(1.15);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(30, 58, 138, 0.14) 0%, rgba(30, 64, 175, 0.08) 100%);
+            color: var(--blue-deep);
+            font-weight: 600;
+            box-shadow: none;
+            border-left: 2px solid var(--blue-primary);
+        }
+
+        .nav-item.active::before {
+            opacity: 0;
+        }
+
+        .nav-icon {
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            filter: drop-shadow(0 2px 4px rgba(30, 58, 138, 0.2));
+            transition: all 0.3s var(--transition-spring);
+            flex-shrink: 0;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            margin-top: 74px;
+            padding: 40px;
+            overflow-y: auto;
+            background: transparent;
+            height: calc(100vh - 74px);
+        }
+
+        .main-content::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .main-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .main-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--blue-primary) 0%, var(--blue-light) 100%);
+            border-radius: 3px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .main-content:hover::-webkit-scrollbar-thumb {
+            opacity: 1;
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 2px solid var(--glass-border);
+        }
+
+        .section-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--blue-deep);
+        }
+
+        .section-header-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        /* FILTROS */
+        .filters-container {
+            background: var(--glass-bg-dark);
+            backdrop-filter: blur(16px);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-md);
+            position: relative;
+        }
+
+        .filters-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+        }
+
+        .filter-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 12px 16px 12px 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--blue-primary);
+            box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.1);
+        }
+
+        .filter-group::before {
+            content: '🔍';
+            position: absolute;
+            left: 16px;
+            top: 42px;
+            font-size: 16px;
+            opacity: 0.5;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .filter-group select::before {
+            content: '▼';
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--blue-primary);
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .filters-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding-top: 12px;
+        }
+
+        /* PAGINATION */
+        .pagination-container {
+            background: var(--glass-bg-dark);
+            backdrop-filter: blur(16px);
+            border-radius: var(--radius-lg);
+            padding: 24px 28px;
+            border: 1px solid var(--glass-border);
+            margin-top: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .pagination-info {
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .pagination-select {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .pagination-select label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .pagination-select select {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .pagination-select select:hover {
+            border-color: var(--blue-primary);
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .pagination-btn {
+            padding: 10px 14px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            transition: all 0.3s var(--transition-spring);
+            min-width: 38px;
+            text-align: center;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: rgba(30, 58, 138, 0.1);
+            border-color: var(--blue-primary);
+            color: var(--blue-primary);
+            transform: translateY(-2px);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn.active {
+            background: linear-gradient(135deg, var(--blue-deep) 0%, var(--blue-primary) 100%);
+            color: white;
+            border-color: var(--blue-primary);
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            overflow: visible;
+            box-shadow: var(--shadow-md);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--blue-deep) 0%, var(--blue-primary) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 12px 32px rgba(30, 58, 138, 0.35);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-dark) 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 12px 32px rgba(16, 185, 129, 0.35);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 12px 32px rgba(239, 68, 68, 0.35);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            box-shadow: 0 12px 32px rgba(245, 158, 11, 0.35);
+        }
+
+        .btn-secondary {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(30, 58, 138, 0.1);
+            border-color: var(--blue-primary);
+            color: var(--blue-primary);
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 12px;
+            letter-spacing: 0.3px;
+        }
+
+        /* SKELETON LOADERS */
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e8f8 50%, #f0f0f0 75%);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite;
+            border-radius: 6px;
+        }
+
+        .skeleton-text {
+            height: 12px;
+            margin: 8px 0;
+            border-radius: 4px;
+        }
+
+        .skeleton-card {
+            padding: 20px;
+            height: 140px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 16px;
+        }
+
+        .skeleton-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .skeleton-row > * {
+            flex: 1;
+            height: 20px;
+        }
+
+        .skeleton-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .table-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        td.actions-cell {
+            min-width: 220px;
+        }
+
+        .table-actions .btn.btn-sm {
+            padding: 6px 12px;
+            min-height: 32px;
+            font-size: 12px;
+            line-height: 1.2;
+            box-shadow: none;
+        }
+
+        .table-actions .btn.btn-sm:hover {
+            transform: translateY(-1px);
+        }
+
+        /* TABELA */
+        .table-container {
+            background: var(--glass-bg-dark);
+            backdrop-filter: blur(16px);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            border: 1px solid var(--glass-border);
+            overflow-x: auto;
+            box-shadow: var(--shadow-lg);
+            contain: layout;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: auto;
+        }
+
+        thead {
+            background: linear-gradient(135deg, rgba(30, 58, 138, 0.1) 0%, rgba(30, 64, 175, 0.1) 100%);
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            backdrop-filter: blur(12px);
+        }
+
+        th, td {
+            padding: 18px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        th {
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+            color: var(--blue-deep);
+        }
+
+        tbody tr {
+            border-left: 3px solid transparent;
+        }
+
+        tbody tr:nth-child(even) {
+            background: rgba(30, 58, 138, 0.018);
+        }
+
+        tbody tr:hover {
+            background: rgba(30, 58, 138, 0.08);
+            border-left-color: var(--blue-primary);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+        }
+
+        .status-badge::before {
+            content: '•';
+            display: inline-block;
+            animation: pulse-dot 2s ease-in-out infinite;
+            font-size: 14px;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .status-ativo {
+            background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-dark) 100%);
+            color: white;
+        }
+
+        .status-inativo {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .status-pending {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(30, 58, 138, 0.35);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: modalBackdropIn 0.3s ease-out;
+        }
+
+        @keyframes modalBackdropIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--glass-bg-dark);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 680px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(30, 58, 138, 0.25);
+            animation: modalSlideIn 0.4s var(--transition-spring);
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-60px) scale(0.92);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-content::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--blue-primary) 0%, var(--blue-light) 100%);
+            border-radius: 3px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-content:hover::-webkit-scrollbar-thumb {
+            opacity: 1;
+        }
+
+        .modal-header {
+            padding: 32px 28px;
+            background: linear-gradient(135deg, var(--blue-deep) 0%, var(--blue-primary) 100%);
+            color: white;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .modal-header::before {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: url('data:image/svg+xml,<svg viewBox="0 0 1000 100" xmlns="http://www.w3.org/2000/svg"><path d="M0,50 Q250,0 500,50 T1000,50 L1000,100 L0,100 Z" fill="rgba(255,255,255,0.05)"/></svg>');
+            background-size: cover;
+            background-position: bottom;
+        }
+
+        .modal-header-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            flex-shrink: 0;
+        }
+
+        .modal-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .modal-body {
+            padding: 32px 28px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 28px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: all 0.3s var(--transition-spring);
+            position: relative;
+            font-family: inherit;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--blue-primary);
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1), inset 0 0 0 1px rgba(30, 58, 138, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .form-group input:focus::after {
+            width: 100%;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: var(--radius-md);
+            background: rgba(30, 58, 138, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-group:hover {
+            background: rgba(30, 58, 138, 0.1);
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--blue-primary);
+        }
+
+        .modal-footer {
+            padding: 24px 28px;
+            background: rgba(30, 58, 138, 0.05);
+            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+            display: flex;
+            justify-content: flex-end;
+            gap: 16px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .multi-select {
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            max-height: 280px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .multi-select input[type="text"] {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .multi-select::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .multi-select::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .multi-select::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--blue-primary) 0%, var(--blue-light) 100%);
+            border-radius: 3px;
+        }
+
+        .multi-select-item {
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-radius: var(--radius-md);
+            transition: all 0.2s ease;
+            margin-bottom: 6px;
+        }
+
+        .multi-select-item:hover {
+            background: rgba(30, 58, 138, 0.1);
+        }
+
+        .multi-select-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .multi-select-item input[type="checkbox"] {
+            accent-color: var(--blue-primary);
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--glass-bg-dark);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-top: 4px solid;
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            text-align: center;
+            transition: all 0.3s var(--transition-spring);
+            box-shadow: var(--shadow-md);
+            animation: fadeInUp 0.5s ease-out;
+            position: relative;
+            overflow: hidden;
+            will-change: transform;
+        }
+
+        .stat-card:nth-child(1) {
+            border-top-color: var(--blue-primary);
+        }
+
+        .stat-card:nth-child(2) {
+            border-top-color: var(--blue-light);
+        }
+
+        .stat-card:nth-child(3) {
+            border-top-color: var(--emerald);
+        }
+
+        .stat-card:nth-child(4) {
+            border-top-color: var(--emerald-dark);
+        }
+
+        .stat-card:nth-child(5) {
+            border-top-color: #f59e0b;
+        }
+
+        .stat-card:nth-child(6) {
+            border-top-color: #8b5cf6;
+        }
+
+        .stat-card:nth-child(7) {
+            border-top-color: #ec4899;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            right: -20px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: 0.06;
+            transition: all 0.3s ease;
+            z-index: 0;
+        }
+
+        .stat-card:hover::before {
+            width: 150px;
+            height: 150px;
+            bottom: -30px;
+            right: -30px;
+        }
+
+        .stat-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-value {
+            font-size: 44px;
+            font-weight: 800;
+            color: var(--blue-deep);
+            margin: 16px 0;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-trend {
+            font-size: 12px;
+            color: var(--emerald-dark);
+            margin-top: 12px;
+            position: relative;
+            z-index: 1;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 100px 20px;
+            color: var(--text-muted);
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .empty-state-icon {
+            font-size: 80px;
+            margin-bottom: 28px;
+            opacity: 0.3;
+            filter: drop-shadow(0 4px 12px rgba(30, 58, 138, 0.2));
+            animation: gentle-float 3s ease-in-out infinite;
+        }
+
+        @keyframes gentle-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-muted);
+            font-size: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .loading::before {
+            content: '';
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(30, 58, 138, 0.15);
+            border-top-color: var(--blue-primary);
+            border-radius: 50%;
+            animation: breathe 1.5s ease-in-out infinite;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-left: 4px solid #ef4444;
+            color: #dc2626;
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            backdrop-filter: blur(12px);
+            animation: shake 0.4s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .error-message::before {
+            content: '✕';
+            font-size: 20px;
+            font-weight: 700;
+            color: #ef4444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+        }
+
+        .error-message::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #ef4444 0%, transparent 100%);
+            animation: progressBar 3s ease-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        @keyframes progressBar {
+            0% { width: 100%; }
+            100% { width: 0%; }
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-left: 4px solid var(--emerald);
+            color: var(--emerald-dark);
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            backdrop-filter: blur(12px);
+            animation: slideInRight 0.4s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .success-message::before {
+            content: '✓';
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--emerald);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+        }
+
+        .success-message::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--emerald) 0%, transparent 100%);
+            animation: progressBar 3s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .info-badge {
+            padding: 6px 12px;
+            border-radius: var(--radius-md);
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(30, 58, 138, 0.1);
+            color: var(--blue-deep);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-right: 6px;
+            border: 1px solid rgba(30, 58, 138, 0.2);
+        }
+
+        .info-badge-success {
+            padding: 6px 12px;
+            border-radius: var(--radius-md);
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--emerald-dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-right: 6px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .info-badge-warning {
+            padding: 6px 12px;
+            border-radius: var(--radius-md);
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(245, 158, 11, 0.1);
+            color: #d97706;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-right: 6px;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            z-index: 2001;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 400px;
+        }
+
+        .toast {
+            background: var(--glass-bg-dark);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-left: 4px solid;
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: toastSlideIn 0.3s var(--transition-spring);
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+
+        @keyframes toastSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(400px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast-icon {
+            font-size: 20px;
+            min-width: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .toast-close {
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            padding: 0;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+
+        .toast-close:hover {
+            opacity: 1;
+        }
+
+        .toast-success {
+            border-left-color: var(--emerald);
+        }
+
+        .toast-error {
+            border-left-color: #ef4444;
+        }
+
+        .toast-warning {
+            border-left-color: #f59e0b;
+        }
+
+        .toast-info {
+            border-left-color: var(--blue-primary);
+        }
+
+        /* MOBILE MENU TOGGLE */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 101;
+            background: linear-gradient(135deg, var(--blue-deep) 0%, var(--blue-primary) 100%);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            font-size: 20px;
+            transition: all 0.3s var(--transition-spring);
+        }
+
+        .mobile-menu-toggle:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 98;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .top-bar {
+                left: 0;
+                padding: 0 60px 0 20px;
+            }
+
+            .top-bar-breadcrumb {
+                display: none;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                box-shadow: 2px 0 16px rgba(30, 58, 138, 0.2);
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+                box-shadow: 4px 0 32px rgba(30, 58, 138, 0.3);
+            }
+
+            .mobile-overlay.active {
+                display: block;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 28px 24px;
+            }
+
+            .filters-row {
+                grid-template-columns: 1fr;
+            }
+
+            .pagination-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .pagination-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .pagination-buttons {
+                justify-content: center;
+            }
+
+            .stats-container {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 20px;
+                margin-top: 74px;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 16px;
+            }
+
+            .section-header h1 {
+                font-size: 24px;
+            }
+
+            .section-header-actions {
+                width: 100%;
+            }
+
+            .section-header-actions .btn {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .top-bar-title {
+                font-size: 20px;
+            }
+
+            .btn-voltar {
+                padding: 8px 16px !important;
+                font-size: 12px !important;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .stat-card {
+                padding: 20px;
+            }
+
+            .stat-value {
+                font-size: 36px;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 12px 10px;
+            }
+
+            .btn-sm {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+
+            td.actions-cell {
+                min-width: 150px;
+            }
+
+            .table-actions {
+                gap: 4px;
+                flex-wrap: wrap;
+            }
+
+            .table-actions .btn.btn-sm {
+                padding: 5px 10px;
+                min-height: 28px;
+                font-size: 10px;
+            }
+
+            .modal-content {
+                width: 95%;
+                max-width: 100%;
+            }
+
+            .modal-header {
+                padding: 20px;
+            }
+
+            .modal-body {
+                padding: 20px;
+            }
+
+            .table-container {
+                padding: 16px;
+                border-radius: var(--radius-md);
+            }
+
+            .filters-container {
+                padding: 20px;
+                border-radius: var(--radius-md);
+            }
+
+            .pagination-container {
+                padding: 16px 20px;
+                border-radius: var(--radius-md);
+            }
+
+            .top-bar-actions {
+                gap: 12px;
+            }
+
+            .top-bar-avatar {
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 16px;
+            }
+
+            .section-header h1 {
+                font-size: 20px;
+            }
+
+            .top-bar {
+                padding: 0 50px 0 16px;
+            }
+
+            .top-bar-title {
+                font-size: 16px;
+            }
+
+            .btn-voltar {
+                display: none;
+            }
+
+            .stats-container {
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 16px;
+            }
+
+            .stat-value {
+                font-size: 32px;
+            }
+
+            .stat-label {
+                font-size: 11px;
+            }
+
+            .filters-row {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 11px;
+            }
+
+            th, td {
+                padding: 10px 8px;
+            }
+
+            .pagination-container {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .pagination-controls {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .pagination-buttons {
+                gap: 4px;
+            }
+
+            .pagination-btn {
+                padding: 8px 10px;
+                font-size: 12px;
+                min-width: 32px;
+            }
+
+            .toast-container {
+                right: 10px;
+                left: 10px;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+    <div class="mobile-overlay" id="mobile-overlay" onclick="toggleMobileMenu()"></div>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="top-bar-content">
+            <div class="top-bar-icon" id="top-bar-section-icon">📊</div>
+            <div class="top-bar-title-group">
+                <div class="top-bar-title" id="page-title">Dashboard</div>
+                <div class="top-bar-separator"></div>
+                <div class="top-bar-breadcrumb">
+                    <span id="breadcrumb-text">Visão Geral</span>
+                </div>
+            </div>
+        </div>
+        <div class="top-bar-actions">
+            <button class="btn btn-secondary btn-voltar" onclick="voltarAoChat()" title="Voltar ao chat">
+                <span>←</span> Voltar
+            </button>
+            <div class="top-bar-avatar" id="user-avatar" title="Admin" onclick="abrirMenuAdmin()">AD</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- SIDEBAR -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">⚙️</div>
+                <h2>Painel Administrativo</h2>
+                <div class="sidebar-version">v1.0 · Admin Panel</div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Dashboard</div>
+                <div class="nav-item active" data-section="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span>Visão Geral</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Gestão de Pessoal</div>
+                <div class="nav-item" data-section="funcionarios">
+                    <span class="nav-icon">👥</span>
+                    <span>Funcionários</span>
+                </div>
+                <div class="nav-item" data-section="setores">
+                    <span class="nav-icon">🏢</span>
+                    <span>Setores</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Corpo Médico</div>
+                <div class="nav-item" data-section="medicos">
+                    <span class="nav-icon">👨‍⚕️</span>
+                    <span>Médicos</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Procedimentos</div>
+                <div class="nav-item" data-section="procedimentos">
+                    <span class="nav-icon">💉</span>
+                    <span>Procedimentos</span>
+                </div>
+                <div class="nav-item" data-section="cnn-duplas">
+                    <span class="nav-icon">🔗</span>
+                    <span>CNN Duplas</span>
+                </div>
+                <div class="nav-item" data-section="tipos-atendimento">
+                    <span class="nav-icon">🏥</span>
+                    <span>Tipos de Atendimento</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- DASHBOARD -->
+            <div id="dashboard" class="content-section active">
+                <div class="section-header">
+                    <h1>Visão Geral</h1>
+                </div>
+                <div class="stats-container" id="stats-dashboard"></div>
+            </div>
+
+            <!-- FUNCIONÁRIOS -->
+            <div id="funcionarios" class="content-section">
+                <div class="section-header">
+                    <h1>Funcionários</h1>
+                    <button class="btn btn-primary" onclick="abrirModalFuncionario()">
+                        + Novo Funcionário
+                    </button>
+                </div>
+                
+                <!-- Filtros -->
+                <div class="filters-container">
+                    <div class="filters-row">
+                        <div class="filter-group">
+                            <label>Buscar</label>
+                            <input type="text" id="filter-func-search" placeholder="Nome, email ou ramal...">
+                        </div>
+                        <div class="filter-group">
+                            <label>Setor</label>
+                            <select id="filter-func-setor">
+                                <option value="">Todos os setores</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Status</label>
+                            <select id="filter-func-status">
+                                <option value="">Todos</option>
+                                <option value="1">Ativos</option>
+                                <option value="0">Inativos</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Login</label>
+                            <select id="filter-func-login">
+                                <option value="">Todos</option>
+                                <option value="1">Com login</option>
+                                <option value="0">Sem login</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filters-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="limparFiltrosFuncionarios()">Limpar Filtros</button>
+                        <button class="btn btn-primary btn-sm" onclick="aplicarFiltrosFuncionarios()">Aplicar Filtros</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="table-funcionarios">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Ramal</th>
+                                <th>Setor</th>
+                                <th>Status</th>
+                                <th>Login</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <!-- Paginação -->
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        Mostrando <span id="func-showing">0</span> de <span id="func-total">0</span> funcionários
+                    </div>
+                    <div class="pagination-controls">
+                        <div class="pagination-select">
+                            <label>Itens por página:</label>
+                            <select id="func-per-page" onchange="mudarItensPorPagina('funcionarios')">
+                                <option value="10">10</option>
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="pagination-buttons" id="func-pagination"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETORES -->
+            <div id="setores" class="content-section">
+                <div class="section-header">
+                    <h1>Setores</h1>
+                    <button class="btn btn-primary" onclick="abrirModalSetor()">
+                        + Novo Setor
+                    </button>
+                </div>
+
+                <!-- Filtros -->
+                <div class="filters-container">
+                    <div class="filters-row">
+                        <div class="filter-group">
+                            <label>Buscar</label>
+                            <input type="text" id="filter-setor-search" placeholder="Nome do setor...">
+                        </div>
+                    </div>
+                    <div class="filters-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="limparFiltrosSetores()">Limpar Filtros</button>
+                        <button class="btn btn-primary btn-sm" onclick="aplicarFiltrosSetores()">Aplicar Filtros</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="table-setores">
+                        <thead>
+                            <tr>
+                                <th>Nome do Setor</th>
+                                <th>Total de Funcionários</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <!-- Paginação -->
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        Mostrando <span id="setor-showing">0</span> de <span id="setor-total">0</span> setores
+                    </div>
+                    <div class="pagination-controls">
+                        <div class="pagination-select">
+                            <label>Itens por página:</label>
+                            <select id="setor-per-page" onchange="mudarItensPorPagina('setores')">
+                                <option value="10">10</option>
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="pagination-buttons" id="setor-pagination"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MÉDICOS -->
+            <div id="medicos" class="content-section">
+                <div class="section-header">
+                    <h1>Médicos</h1>
+                    <button class="btn btn-primary" onclick="abrirModalMedico()">
+                        + Novo Médico
+                    </button>
+                </div>
+
+                <!-- Filtros -->
+                <div class="filters-container">
+                    <div class="filters-row">
+                        <div class="filter-group">
+                            <label>Buscar</label>
+                            <input type="text" id="filter-med-search" placeholder="Nome ou CRM...">
+                        </div>
+                        <div class="filter-group">
+                            <label>Status</label>
+                            <select id="filter-med-status">
+                                <option value="">Todos</option>
+                                <option value="1">Ativos</option>
+                                <option value="0">Inativos</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filters-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="limparFiltrosMedicos()">Limpar Filtros</button>
+                        <button class="btn btn-primary btn-sm" onclick="aplicarFiltrosMedicos()">Aplicar Filtros</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="table-medicos">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>CRM</th>
+                                <th>Status</th>
+                                <th>Informações</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <!-- Paginação -->
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        Mostrando <span id="med-showing">0</span> de <span id="med-total">0</span> médicos
+                    </div>
+                    <div class="pagination-controls">
+                        <div class="pagination-select">
+                            <label>Itens por página:</label>
+                            <select id="med-per-page" onchange="mudarItensPorPagina('medicos')">
+                                <option value="10">10</option>
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="pagination-buttons" id="med-pagination"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PROCEDIMENTOS -->
+            <div id="procedimentos" class="content-section">
+                <div class="section-header">
+                    <h1>Procedimentos</h1>
+                    <button class="btn btn-primary" onclick="abrirModalProcedimento()">
+                        + Novo Procedimento
+                    </button>
+                </div>
+
+                <!-- Filtros -->
+                <div class="filters-container">
+                    <div class="filters-row">
+                        <div class="filter-group">
+                            <label>Buscar</label>
+                            <input type="text" id="filter-proc-search" placeholder="Nome do procedimento...">
+                        </div>
+                    </div>
+                    <div class="filters-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="limparFiltrosProcedimentos()">Limpar Filtros</button>
+                        <button class="btn btn-primary btn-sm" onclick="aplicarFiltrosProcedimentos()">Aplicar Filtros</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="table-procedimentos">
+                        <thead>
+                            <tr>
+                                <th>Nome do Procedimento</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <!-- Paginação -->
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        Mostrando <span id="proc-showing">0</span> de <span id="proc-total">0</span> procedimentos
+                    </div>
+                    <div class="pagination-controls">
+                        <div class="pagination-select">
+                            <label>Itens por página:</label>
+                            <select id="proc-per-page" onchange="mudarItensPorPagina('procedimentos')">
+                                <option value="10">10</option>
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="pagination-buttons" id="proc-pagination"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CNN DUPLAS -->
+            <div id="cnn-duplas" class="content-section">
+                <div class="section-header">
+                    <h1>CNN Duplas</h1>
+                    <button class="btn btn-primary" onclick="abrirModalCnnDupla()">
+                        + Nova CNN Dupla
+                    </button>
+                </div>
+
+                <!-- Filtros -->
+                <div class="filters-container">
+                    <div class="filters-row">
+                        <div class="filter-group">
+                            <label>Buscar</label>
+                            <input type="text" id="filter-cnn-search" placeholder="Código ou nome...">
+                        </div>
+                    </div>
+                    <div class="filters-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="limparFiltrosCnnDuplas()">Limpar Filtros</button>
+                        <button class="btn btn-primary btn-sm" onclick="aplicarFiltrosCnnDuplas()">Aplicar Filtros</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="table-cnn-duplas">
+                        <thead>
+                            <tr>
+                                <th>Código CNN</th>
+                                <th>Nome</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <!-- Paginação -->
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        Mostrando <span id="cnn-showing">0</span> de <span id="cnn-total">0</span> CNN duplas
+                    </div>
+                    <div class="pagination-controls">
+                        <div class="pagination-select">
+                            <label>Itens por página:</label>
+                            <select id="cnn-per-page" onchange="mudarItensPorPagina('cnn-duplas')">
+                                <option value="10">10</option>
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="pagination-buttons" id="cnn-pagination"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TIPOS DE ATENDIMENTO -->
+            <div id="tipos-atendimento" class="content-section">
+                <div class="section-header">
+                    <h1>Tipos de Atendimento</h1>
+                    <button class="btn btn-primary" onclick="abrirModalTipoAtendimento()">
+                        + Novo Tipo
+                    </button>
+                </div>
+
+                <!-- Filtros -->
+                <div class="filters-container">
+                    <div class="filters-row">
+                        <div class="filter-group">
+                            <label>Buscar</label>
+                            <input type="text" id="filter-tipo-search" placeholder="Nome do tipo...">
+                        </div>
+                    </div>
+                    <div class="filters-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="limparFiltrosTiposAtendimento()">Limpar Filtros</button>
+                        <button class="btn btn-primary btn-sm" onclick="aplicarFiltrosTiposAtendimento()">Aplicar Filtros</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="table-tipos-atendimento">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <!-- Paginação -->
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        Mostrando <span id="tipo-showing">0</span> de <span id="tipo-total">0</span> tipos
+                    </div>
+                    <div class="pagination-controls">
+                        <div class="pagination-select">
+                            <label>Itens por página:</label>
+                            <select id="tipo-per-page" onchange="mudarItensPorPagina('tipos-atendimento')">
+                                <option value="10">10</option>
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="pagination-buttons" id="tipo-pagination"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="global-loading" class="global-loading active" aria-live="polite">
+        <div class="spinner" aria-hidden="true"></div>
+        <div class="label">Carregando painel...</div>
+    </div>
+
+    <!-- MODAIS -->
+    <div id="modal-container"></div>
+
+    <script>
+
+        const prefixosTabela = {
+        funcionarios: 'func',
+        setores: 'setor',
+        medicos: 'med',
+        procedimentos: 'proc',
+        'cnn-duplas': 'cnn',
+        'tipos-atendimento': 'tipo'
+    };
+        
+        // ===========================
+        // SISTEMA DE CACHE COM TTL
+        // ===========================
+        const cache = {
+            data: {},
+            ttl: {},
+            set(key, value, ttlMs = 30000) {
+                this.data[key] = value;
+                this.ttl[key] = Date.now() + ttlMs;
+            },
+            get(key) {
+                if (!this.data.hasOwnProperty(key)) return null;
+                if (Date.now() > this.ttl[key]) {
+                    delete this.data[key];
+                    delete this.ttl[key];
+                    return null;
+                }
+                return this.data[key];
+            },
+            invalidate(key) {
+                delete this.data[key];
+                delete this.ttl[key];
+            },
+            invalidatePattern(pattern) {
+                Object.keys(this.data).forEach(key => {
+                    if (key.includes(pattern)) this.invalidate(key);
+                });
+            }
+        };
+
+        // ===========================
+        // UTILITÁRIOS - DEBOUNCE E THROTTLE
+        // ===========================
+        function debounce(fn, ms) {
+            let t;
+            return (...args) => {
+                clearTimeout(t);
+                t = setTimeout(() => fn(...args), ms);
+            };
+        }
+
+        function throttle(fn, ms) {
+            let last = 0;
+            return (...args) => {
+                const now = Date.now();
+                if (now - last >= ms) {
+                    last = now;
+                    fn(...args);
+                }
+            };
+        }
+
+        // ===========================
+        // SKELETON LOADER UTILITIES
+        // ===========================
+        const createSkeletonRow = (colCount = 5) => {
+            return `<tr>${Array(colCount).fill('<td><div class="skeleton skeleton-text"></div></td>').join('')}</tr>`;
+        };
+
+        const createSkeletonTable = (rows = 5, cols = 5) => {
+            return Array(rows).fill(createSkeletonRow(cols)).join('');
+        };
+
+        const createSkeletonCard = () => {
+            return `<div class="skeleton skeleton-card"></div>`;
+        };
+
+        const showSkeletonTable = (elementId, rows = 5, cols = 5) => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = createSkeletonTable(rows, cols);
+            }
+        };
+
+        const showSkeletonDashboard = () => {
+            const dashboard = document.getElementById('stats-dashboard');
+            if (dashboard) {
+                dashboard.innerHTML = Array(7).fill(createSkeletonCard()).join('');
+            }
+        };
+
+        // ===========================
+        // VARIÁVEIS GLOBAIS
+        // ===========================
+        let currentSection = 'dashboard';
+        let editandoId = null;
+        let todosSetores = [];
+        let todosMedicos = [];
+        let todosProcedimentos = [];
+        let todosTiposAtendimento = [];
+        let todosFuncionarios = [];
+        let currentSaveHandler = null;
+        let salvandoFuncionario = false;
+
+        // Dados filtrados e paginação
+        let dadosFiltrados = {
+            funcionarios: [],
+            setores: [],
+            medicos: [],
+            procedimentos: [],
+            'cnn-duplas': [],
+            'tipos-atendimento': []
+        };
+
+        let paginacaoAtual = {
+            funcionarios: { pagina: 1, porPagina: 25 },
+            setores: { pagina: 1, porPagina: 25 },
+            medicos: { pagina: 1, porPagina: 25 },
+            procedimentos: { pagina: 1, porPagina: 25 },
+            'cnn-duplas': { pagina: 1, porPagina: 25 },
+            'tipos-atendimento': { pagina: 1, porPagina: 25 }
+        };
+
+        // Títulos das seções
+        const titulosSecoes = {
+            'dashboard': 'Dashboard',
+            'funcionarios': 'Funcionários',
+            'setores': 'Setores',
+            'medicos': 'Médicos',
+            'procedimentos': 'Procedimentos',
+            'cnn-duplas': 'CNN Duplas',
+            'tipos-atendimento': 'Tipos de Atendimento'
+        };
+        function mudarPagina(tipo, novaPagina) {
+    try {
+        if (!paginacaoAtual[tipo]) {
+            console.warn(`paginacaoAtual["${tipo}"] não existe`);
+            return;
+        }
+
+        const totalRegistros = (dadosFiltrados[tipo] && Array.isArray(dadosFiltrados[tipo])) ? dadosFiltrados[tipo].length : 0;
+        const porPagina = paginacaoAtual[tipo].porPagina;
+        const totalPaginas = Math.max(1, Math.ceil(totalRegistros / porPagina));
+
+        if (novaPagina < 1) novaPagina = 1;
+        if (novaPagina > totalPaginas) novaPagina = totalPaginas;
+
+        paginacaoAtual[tipo].pagina = novaPagina;
+        renderizarTabela(tipo);
+    } catch (err) {
+        console.error(`Erro em mudarPagina(${tipo}, ${novaPagina}):`, err);
+    }
+}
+
+function mudarItensPorPagina(tipo) {
+    try {
+        const prefixo = prefixosTabela[tipo];
+
+        if (!prefixo) {
+            console.warn(`Prefixo não encontrado para tipo: ${tipo}`);
+            return;
+        }
+
+        const select = document.getElementById(`${prefixo}-per-page`);
+
+        if (!select) {
+            console.warn(`Select #${prefixo}-per-page não encontrado`);
+            return;
+        }
+
+        paginacaoAtual[tipo].porPagina = parseInt(select.value) || 25;
+        paginacaoAtual[tipo].pagina = 1;
+        renderizarTabela(tipo);
+    } catch (err) {
+        console.error(`Erro em mudarItensPorPagina(${tipo}):`, err);
+    }
+}
+        // ===========================
+        // NAVEGAÇÃO
+        // ===========================
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const section = this.getAttribute('data-section');
+                trocarSecao(section);
+            });
+        });
+
+        function trocarSecao(section) {
+            // Atualizar nav
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-section="${section}"]`).classList.add('active');
+
+            // Atualizar conteúdo
+            document.querySelectorAll('.content-section').forEach(sec => {
+                sec.classList.remove('active');
+            });
+            document.getElementById(section).classList.add('active');
+
+            // Atualizar título
+            document.getElementById('page-title').textContent = titulosSecoes[section] || section;
+            
+            // Atualizar ícone da seção
+            atualizarIconeSecao(section);
+
+            currentSection = section;
+            carregarDados(section);
+
+            // Fechar menu mobile se estiver aberto
+            if (window.innerWidth <= 1024) {
+                toggleMobileMenu(false);
+            }
+        }
+
+        function toggleMobileMenu(forceClose = null) {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            
+            if (forceClose === false) {
+                sidebar.classList.remove('mobile-open');
+                overlay.classList.remove('active');
+            } else {
+                sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('active');
+            }
+        }
+
+        function voltarAoChat() {
+            window.pywebview.api.voltar_ao_chat();
+        }
+
+        // ===========================
+        // CARREGAR DADOS
+        // ===========================
+        async function carregarDados(section) {
+            try {
+                if (!section) {
+                    console.warn('Seção não definida, usando dashboard');
+                    section = 'dashboard';
+                }
+
+                switch(section) {
+                    case 'dashboard':
+                        await carregarDashboard();
+                        break;
+                    case 'funcionarios':
+                        await carregarFuncionarios();
+                        break;
+                    case 'setores':
+                        await carregarSetores();
+                        break;
+                    case 'medicos':
+                        await carregarMedicos();
+                        break;
+                    case 'procedimentos':
+                        await carregarProcedimentos();
+                        break;
+                    case 'cnn-duplas':
+                        await carregarCnnDuplas();
+                        break;
+                    case 'tipos-atendimento':
+                        await carregarTiposAtendimento();
+                        break;
+                    default:
+                        console.warn(`Seção desconhecida: ${section}`);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                mostrarErro('Erro ao carregar dados. Por favor, recarregue a página.');
+            }
+        }
+
+        // ===========================
+        // DASHBOARD
+        // ===========================
+        async function carregarDashboard() {
+            const container = document.getElementById('stats-dashboard');
+            if (!container) return;
+            
+            // Mostrar skeleton loaders
+            showSkeletonDashboard();
+
+            try {
+                // Carregar com segurança - cada um com seu próprio try-catch
+                let medicos = { total: 0, ativos: 0 };
+                let funcionarios = [];
+                let setores = [];
+                let procedimentos = [];
+                let tiposAtendimento = [];
+
+                // Paralelizar todas as requisições com Promise.allSettled()
+                const results = await Promise.allSettled([
+                    window.pywebview.api.admin_contar_medicos(),
+                    window.pywebview.api.admin_listar_funcionarios(),
+                    window.pywebview.api.admin_listar_setores(),
+                    window.pywebview.api.admin_listar_procedimentos(),
+                    window.pywebview.api.admin_listar_tipos_atendimento()
+                ]);
+
+                // Processar resultados
+                if (results[0].status === 'fulfilled') {
+                    medicos = results[0].value || medicos;
+                }
+                if (results[1].status === 'fulfilled') {
+                    funcionarios = results[1].value || [];
+                }
+                if (results[2].status === 'fulfilled') {
+                    setores = results[2].value || [];
+                }
+                if (results[3].status === 'fulfilled') {
+                    procedimentos = results[3].value || [];
+                }
+                if (results[4].status === 'fulfilled') {
+                    tiposAtendimento = results[4].value || [];
+                }
+
+                // Garantir que medicos tem as propriedades necessárias
+                if (!medicos || typeof medicos !== 'object') {
+                    medicos = { total: 0, ativos: 0 };
+                }
+                
+                // Garantir arrays vazios
+                if (!Array.isArray(funcionarios)) funcionarios = [];
+                if (!Array.isArray(setores)) setores = [];
+                if (!Array.isArray(procedimentos)) procedimentos = [];
+                if (!Array.isArray(tiposAtendimento)) tiposAtendimento = [];
+
+                const funcionariosAtivos = funcionarios.filter(f => f && f.ativo === 1).length;
+
+                container.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-label">Total de Médicos</div>
+                        <div class="stat-value">${medicos.total || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Médicos Ativos</div>
+                        <div class="stat-value">${medicos.ativos || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total de Funcionários</div>
+                        <div class="stat-value">${funcionarios.length || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Funcionários Ativos</div>
+                        <div class="stat-value">${funcionariosAtivos}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total de Setores</div>
+                        <div class="stat-value">${setores.length || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total de Procedimentos</div>
+                        <div class="stat-value">${procedimentos.length || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Tipos de Atendimento</div>
+                        <div class="stat-value">${tiposAtendimento.length || 0}</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro geral no dashboard:', error);
+                container.innerHTML = '<div class="error-message">Erro ao carregar estatísticas. Por favor, recarregue a página.</div>';
+            }
+        }
+
+        // ===========================
+        // PAGINAÇÃO E FILTROS
+      function aplicarPaginacao(tipo, dados) {
+    try {
+        if (!paginacaoAtual[tipo]) {
+            console.warn(`paginacaoAtual["${tipo}"] não existe, criando...`);
+            paginacaoAtual[tipo] = { pagina: 1, porPagina: 25 };
+        }
+
+        if (!Array.isArray(dados)) {
+            console.warn(`Dados inválidos para paginação (${tipo}):`, dados);
+            return [];
+        }
+
+        const pag = paginacaoAtual[tipo];
+        const inicio = (pag.pagina - 1) * pag.porPagina;
+        const fim = inicio + pag.porPagina;
+        const dadosPaginados = dados.slice(inicio, fim);
+
+        const prefixo = prefixosTabela[tipo];
+        
+        // Atualizar info de exibição
+        if (prefixo) {
+            const elShowing = document.getElementById(`${prefixo}-showing`);
+            if (elShowing) {
+                elShowing.textContent = Math.min(dados.length, fim);
+            }
+
+            const elTotal = document.getElementById(`${prefixo}-total`);
+            if (elTotal) {
+                elTotal.textContent = dados.length;
+            }
+
+            // Renderizar paginação
+            const container = document.getElementById(`${prefixo}-pagination`);
+            if (container) {
+                const totalPaginas = Math.max(1, Math.ceil(dados.length / pag.porPagina));
+                let html = '';
+
+                // ANTERIOR
+                html += `<button class="pagination-btn" ${pag.pagina === 1 ? 'disabled' : ''} onclick="mudarPagina('${tipo}', ${pag.pagina - 1})">←</button>`;
+
+                const maxBotoes = 5;
+                let inicioPag = Math.max(1, pag.pagina - Math.floor(maxBotoes / 2));
+                let fimPag = Math.min(totalPaginas, inicioPag + maxBotoes - 1);
+
+                if (fimPag - inicioPag < maxBotoes - 1) {
+                    inicioPag = Math.max(1, fimPag - maxBotoes + 1);
+                }
+
+                if (inicioPag > 1) {
+                    html += `<button class="pagination-btn" onclick="mudarPagina('${tipo}', 1)">1</button>`;
+                    if (inicioPag > 2) html += `<span style="padding:8px;">...</span>`;
+                }
+
+                for (let i = inicioPag; i <= fimPag; i++) {
+                    html += `<button class="pagination-btn ${i === pag.pagina ? 'active' : ''}" onclick="mudarPagina('${tipo}', ${i})">${i}</button>`;
+                }
+
+                if (fimPag < totalPaginas) {
+                    if (fimPag < totalPaginas - 1) html += `<span style="padding:8px;">...</span>`;
+                    html += `<button class="pagination-btn" onclick="mudarPagina('${tipo}', ${totalPaginas})">${totalPaginas}</button>`;
+                }
+
+                // PRÓXIMO
+                html += `<button class="pagination-btn" ${pag.pagina === totalPaginas ? 'disabled' : ''} onclick="mudarPagina('${tipo}', ${pag.pagina + 1})">→</button>`;
+
+                container.innerHTML = html;
+            }
+        }
+
+        return dadosPaginados;
+    } catch (err) {
+        console.error(`Erro em aplicarPaginacao(${tipo}):`, err);
+        return [];
+    }
+}
+        // ===========================
+        // FUNCIONÁRIOS
+        // ===========================
+async function carregarFuncionarios() {
+    try {
+        // Verificar cache primeiro
+        let cachedFuncionarios = cache.get('funcionarios');
+        
+        if (!cachedFuncionarios) {
+            // Mostrar skeleton loaders
+            showSkeletonTable('table-funcionarios', 5, 6);
+
+            todosFuncionarios = await window.pywebview.api.admin_listar_funcionarios();
+            
+            // Cachear resultado
+            if (todosFuncionarios) {
+                cache.set('funcionarios', todosFuncionarios, 30000);
+            }
+        } else {
+            todosFuncionarios = cachedFuncionarios;
+        }
+        if (!Array.isArray(todosFuncionarios)) {
+            todosFuncionarios = [];
+        }
+
+        // Carregar setores
+        if (todosSetores.length === 0) {
+            try {
+                todosSetores = await window.pywebview.api.admin_listar_setores();
+                if (!Array.isArray(todosSetores)) {
+                    todosSetores = [];
+                }
+            } catch (e) {
+                console.error('Erro ao carregar setores:', e);
+                todosSetores = [];
+            }
+        }
+
+        // Preencher select de setores
+        const selectSetor = document.getElementById('filter-func-setor');
+
+        if (selectSetor) {
+            selectSetor.innerHTML =
+                '<option value="">Todos os setores</option>' +
+                (Array.isArray(todosSetores) ? todosSetores.map(s => `<option value="${s.id}">${s.nome || ''}</option>`).join('') : '');
+        }
+
+        dadosFiltrados.funcionarios = [...todosFuncionarios];
+        paginacaoAtual.funcionarios.pagina = 1;
+        renderizarTabela('funcionarios');
+
+    } catch (error) {
+        console.error('Erro ao carregar funcionários:', error);
+        todosFuncionarios = [];
+        dadosFiltrados.funcionarios = [];
+        renderizarTabela('funcionarios');
+    }
+}
+
+
+// ===========================
+// RENDER TABELA (COM VALIDAÇÕES)
+// ===========================
+
+function renderizarTabela(tipo) {
+    try {
+        const tbody = document.querySelector(`#table-${tipo} tbody`);
+        if (!tbody) {
+            console.error(`Tabela #table-${tipo} tbody não encontrada`);
+            return;
+        }
+
+        const dados = dadosFiltrados[tipo];
+        if (!dados || !Array.isArray(dados)) {
+            console.error(`dadosFiltrados.${tipo} é inválido ou undefined`);
+            return;
+        }
+
+        // Garante página válida
+        const totalPaginas = Math.max(1, Math.ceil(dados.length / paginacaoAtual[tipo].porPagina));
+        if (paginacaoAtual[tipo].pagina > totalPaginas) {
+            paginacaoAtual[tipo].pagina = 1;
+        }
+
+        const dadosPaginados = aplicarPaginacao(tipo, dados);
+        if (!dadosPaginados || dadosPaginados.length === 0) {
+            const colspan = tbody.closest('table').querySelectorAll('thead th').length || 1;
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="${colspan}" class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div>Nenhum registro encontrado</div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        let html = '';
+        try {
+            switch (tipo) {
+                case 'funcionarios':
+                    html = dadosPaginados.map(func => {
+                        if (!func) return '';
+                        return `
+                            <tr>
+                                <td>${func.nome || '-'}</td>
+                                <td>${func.email || '-'}</td>
+                                <td>${func.ramal || '-'}</td>
+                                <td>${func.setor || '-'}</td>
+                                <td>
+                                    <span class="status-badge ${func.ativo ? 'status-ativo' : 'status-inativo'}">
+                                        ${func.ativo ? 'Ativo' : 'Inativo'}
+                                    </span>
+                                </td>
+                                <td>
+                                    ${func.tem_login
+                                        ? '<span class="info-badge-success">✓ Login</span>'
+                                        : '<span class="info-badge-warning">⚠ Sem login</span>'
+                                    }
+                                </td>
+                                <td class="actions-cell">
+                                    <div class="table-actions">
+                                        <button class="btn btn-warning btn-sm" onclick="editarFuncionario(${func.id})">Editar</button>
+                                        <button class="btn btn-danger btn-sm" onclick="excluirFuncionario(${func.id})">Excluir</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                    break;
+                    
+                case 'setores':
+                    html = dadosPaginados.map(setor => {
+                        if (!setor) return '';
+                        return `
+                            <tr>
+                                <td>${setor.nome || '-'}</td>
+                                <td>${setor.total_funcionarios || 0}</td>
+                                <td class="actions-cell">
+                                    <div class="table-actions">
+                                        <button class="btn btn-warning btn-sm" onclick="editarSetor(${setor.id})">Editar</button>
+                                        <button class="btn btn-danger btn-sm" onclick="excluirSetor(${setor.id})">Excluir</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                    break;
+                    
+                case 'medicos':
+                    html = dadosPaginados.map(medico => {
+                        if (!medico) return '';
+                        return `
+                            <tr>
+                                <td>${medico.nome || '-'}</td>
+                                <td>${medico.crm || '-'}</td>
+                                <td><span class="status-badge ${medico.ativo ? 'status-ativo' : 'status-inativo'}">${medico.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                                <td>
+                                    <span class="info-badge">${medico.total_procedimentos || 0} proc.</span>
+                                    <span class="info-badge">${medico.total_agendas || 0} agendas</span>
+                                    ${medico.tem_regras ? '<span class="info-badge-success">✓ Regras</span>' : '<span class="info-badge-warning">⚠ Sem regras</span>'}
+                                </td>
+                                <td class="actions-cell">
+                                    <div class="table-actions">
+                                        <button class="btn btn-warning btn-sm" onclick="editarMedico(${medico.id})">Editar</button>
+                                        <button class="btn btn-secondary btn-sm" onclick="gerenciarRegras(${medico.id})">Regras</button>
+                                        <button class="btn btn-secondary btn-sm" onclick="gerenciarProcedimentos(${medico.id})">Procedimentos</button>
+                                        <button class="btn btn-danger btn-sm" onclick="excluirMedico(${medico.id})">Excluir</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                    break;
+                    
+                case 'procedimentos':
+                    html = dadosPaginados.map(proc => {
+                        if (!proc) return '';
+                        return `
+                            <tr>
+                                <td>${proc.nome || '-'}</td>
+                                <td class="actions-cell">
+                                    <div class="table-actions">
+                                        <button class="btn btn-warning btn-sm" onclick="editarProcedimento(${proc.id})">Editar</button>
+                                        <button class="btn btn-danger btn-sm" onclick="excluirProcedimento(${proc.id})">Excluir</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                    break;
+                    
+                case 'cnn-duplas':
+                    html = dadosPaginados.map(cnn => {
+                        if (!cnn) return '';
+                        return `
+                            <tr>
+                                <td>${cnn.codigo_cnn || '-'}</td>
+                                <td>${cnn.nome || '-'}</td>
+                                <td class="actions-cell">
+                                    <div class="table-actions">
+                                        <button class="btn btn-warning btn-sm" onclick="editarCnnDupla(${cnn.id})">Editar</button>
+                                        <button class="btn btn-danger btn-sm" onclick="excluirCnnDupla(${cnn.id})">Excluir</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                    break;
+                    
+                case 'tipos-atendimento':
+                    html = dadosPaginados.map(tipoItem => {
+                        if (!tipoItem) return '';
+                        return `
+                            <tr>
+                                <td>${tipoItem.nome || '-'}</td>
+                                <td class="actions-cell">
+                                    <div class="table-actions">
+                                        <button class="btn btn-warning btn-sm" onclick="editarTipoAtendimento(${tipoItem.id})">Editar</button>
+                                        <button class="btn btn-danger btn-sm" onclick="excluirTipoAtendimento(${tipoItem.id})">Excluir</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                    break;
+                default:
+                    html = '';
+            }
+            tbody.innerHTML = html;
+        } catch (err) {
+            console.error(`Erro renderizando ${tipo}:`, err);
+            const colspan = tbody.closest('table').querySelectorAll('thead th').length || 1;
+            tbody.innerHTML = `<tr><td colspan="${colspan}" class="error-message">Erro ao renderizar dados</td></tr>`;
+        }
+    } catch (err) {
+        console.error(`Erro geral em renderizarTabela(${tipo}):`, err);
+    }
+}
+
+        function aplicarFiltrosFuncionarios() {
+            const search = (document.getElementById('filter-func-search')?.value || '').toLowerCase();
+            const setor = document.getElementById('filter-func-setor')?.value || '';
+            const status = document.getElementById('filter-func-status')?.value || '';
+            const login = document.getElementById('filter-func-login')?.value || '';
+
+            if (!Array.isArray(todosFuncionarios)) {
+                todosFuncionarios = [];
+            }
+
+            dadosFiltrados.funcionarios = todosFuncionarios.filter(func => {
+                if (!func) return false;
+                
+                const matchSearch = !search || 
+                    (func.nome && func.nome.toLowerCase().includes(search)) ||
+                    (func.email && func.email.toLowerCase().includes(search)) ||
+                    (func.ramal && func.ramal.includes(search));
+                
+                const matchSetor = !setor || func.setor_id == setor;
+                const matchStatus = !status || func.ativo == status;
+                const matchLogin = !login || (login == '1' ? func.tem_login : !func.tem_login);
+
+                return matchSearch && matchSetor && matchStatus && matchLogin;
+            });
+
+            paginacaoAtual.funcionarios.pagina = 1;
+            renderizarTabela('funcionarios');
+        }
+
+        function limparFiltrosFuncionarios() {
+            document.getElementById('filter-func-search').value = '';
+            document.getElementById('filter-func-setor').value = '';
+            document.getElementById('filter-func-status').value = '';
+            document.getElementById('filter-func-login').value = '';
+            aplicarFiltrosFuncionarios();
+        }
+
+    
+
+        // ===========================
+        // SETORES
+        // ===========================
+        async function carregarSetores() {
+            try {
+                // Verificar cache primeiro
+                let cachedSetores = cache.get('setores');
+                
+                if (!cachedSetores) {
+                    // Mostrar skeleton loaders
+                    showSkeletonTable('table-setores', 5, 3);
+
+                    todosSetores = await window.pywebview.api.admin_listar_setores();
+                    
+                    // Cachear resultado
+                    if (todosSetores) {
+                        cache.set('setores', todosSetores, 30000);
+                    }
+                } else {
+                    todosSetores = cachedSetores;
+                }
+
+                if (!Array.isArray(todosSetores)) {
+                    todosSetores = [];
+                }
+                dadosFiltrados.setores = [...todosSetores];
+                paginacaoAtual.setores.pagina = 1;
+                renderizarTabela('setores');
+            } catch (error) {
+                console.error('Erro ao carregar setores:', error);
+                todosSetores = [];
+                dadosFiltrados.setores = [];
+                renderizarTabela('setores');
+            }
+        }
+
+        function aplicarFiltrosSetores() {
+            const search = (document.getElementById('filter-setor-search')?.value || '').toLowerCase();
+
+            if (!Array.isArray(todosSetores)) {
+                todosSetores = [];
+            }
+
+            dadosFiltrados.setores = todosSetores.filter(setor => {
+                if (!setor) return false;
+                return !search || (setor.nome && setor.nome.toLowerCase().includes(search));
+            });
+
+            paginacaoAtual.setores.pagina = 1;
+            renderizarTabela('setores');
+        }
+
+        function limparFiltrosSetores() {
+            document.getElementById('filter-setor-search').value = '';
+            aplicarFiltrosSetores();
+        }
+
+        // ===========================
+        // MÉDICOS
+        // ===========================
+async function carregarMedicos() {
+    try {
+        // Verificar cache primeiro
+        let cachedMedicos = cache.get('medicos');
+        
+        if (!cachedMedicos) {
+            // Mostrar skeleton loaders
+            showSkeletonTable('table-medicos', 5, 5);
+
+            todosMedicos = await window.pywebview.api.admin_listar_medicos();
+            
+            // Cachear resultado
+            if (todosMedicos) {
+                cache.set('medicos', todosMedicos, 30000);
+            }
+        } else {
+            todosMedicos = cachedMedicos;
+        }
+        if (!Array.isArray(todosMedicos)) {
+            todosMedicos = [];
+        }
+        dadosFiltrados.medicos = [...todosMedicos];
+        paginacaoAtual.medicos.pagina = 1;
+        renderizarTabela('medicos');
+    } catch (error) {
+        console.error('Erro ao carregar médicos:', error);
+        todosMedicos = [];
+        dadosFiltrados.medicos = [];
+        renderizarTabela('medicos');
+    }
+}
+
+        function aplicarFiltrosMedicos() {
+            const search = (document.getElementById('filter-med-search')?.value || '').toLowerCase();
+            const status = document.getElementById('filter-med-status')?.value || '';
+
+            if (!Array.isArray(todosMedicos)) {
+                todosMedicos = [];
+            }
+
+            dadosFiltrados.medicos = todosMedicos.filter(medico => {
+                if (!medico) return false;
+                
+                const matchSearch = !search || 
+                    (medico.nome && medico.nome.toLowerCase().includes(search)) ||
+                    (medico.crm && medico.crm.toLowerCase().includes(search));
+                
+                const matchStatus = !status || medico.ativo == status;
+
+                return matchSearch && matchStatus;
+            });
+
+            paginacaoAtual.medicos.pagina = 1;
+            renderizarTabela('medicos');
+        }
+
+        function limparFiltrosMedicos() {
+            document.getElementById('filter-med-search').value = '';
+            document.getElementById('filter-med-status').value = '';
+            aplicarFiltrosMedicos();
+        }
+
+        // ===========================
+        // PROCEDIMENTOS
+        // ===========================
+        async function carregarProcedimentos() {
+            try {
+                // Verificar cache primeiro
+                let cachedProcedimentos = cache.get('procedimentos');
+                
+                if (!cachedProcedimentos) {
+                    // Mostrar skeleton loaders
+                    showSkeletonTable('table-procedimentos', 5, 3);
+
+                    todosProcedimentos = await window.pywebview.api.admin_listar_procedimentos();
+                    
+                    // Cachear resultado
+                    if (todosProcedimentos) {
+                        cache.set('procedimentos', todosProcedimentos, 30000);
+                    }
+                } else {
+                    todosProcedimentos = cachedProcedimentos;
+                }
+
+                if (!Array.isArray(todosProcedimentos)) {
+                    todosProcedimentos = [];
+                }
+                dadosFiltrados.procedimentos = [...todosProcedimentos];
+                paginacaoAtual.procedimentos.pagina = 1;
+                renderizarTabela('procedimentos');
+            } catch (error) {
+                console.error('Erro ao carregar procedimentos:', error);
+                todosProcedimentos = [];
+                dadosFiltrados.procedimentos = [];
+                renderizarTabela('procedimentos');
+            }
+        }
+
+        function aplicarFiltrosProcedimentos() {
+            const search = (document.getElementById('filter-proc-search')?.value || '').toLowerCase();
+
+            if (!Array.isArray(todosProcedimentos)) {
+                todosProcedimentos = [];
+            }
+
+            dadosFiltrados.procedimentos = todosProcedimentos.filter(proc => {
+                if (!proc) return false;
+                return !search || (proc.nome && proc.nome.toLowerCase().includes(search));
+            });
+
+            paginacaoAtual.procedimentos.pagina = 1;
+            renderizarTabela('procedimentos');
+        }
+
+        function limparFiltrosProcedimentos() {
+            document.getElementById('filter-proc-search').value = '';
+            aplicarFiltrosProcedimentos();
+        }
+
+        // ===========================
+        // CNN DUPLAS
+        // ===========================
+        async function carregarCnnDuplas() {
+            try {
+                // Verificar cache primeiro
+                let cachedCnnDuplas = cache.get('cnn-duplas');
+                
+                if (!cachedCnnDuplas) {
+                    // Mostrar skeleton loaders
+                    showSkeletonTable('table-cnn-duplas', 5, 4);
+
+                    const dados = await window.pywebview.api.admin_listar_cnn_duplas();
+                    
+                    // Cachear resultado
+                    if (dados) {
+                        cache.set('cnn-duplas', dados, 30000);
+                    }
+                    
+                    if (!Array.isArray(dados)) {
+                        dadosFiltrados['cnn-duplas'] = [];
+                    } else {
+                        dadosFiltrados['cnn-duplas'] = [...dados];
+                    }
+                } else {
+                    if (!Array.isArray(cachedCnnDuplas)) {
+                        dadosFiltrados['cnn-duplas'] = [];
+                    } else {
+                        dadosFiltrados['cnn-duplas'] = [...cachedCnnDuplas];
+                    }
+                }
+                paginacaoAtual['cnn-duplas'].pagina = 1;
+                renderizarTabela('cnn-duplas');
+            } catch (error) {
+                console.error('Erro ao carregar CNN duplas:', error);
+                dadosFiltrados['cnn-duplas'] = [];
+                renderizarTabela('cnn-duplas');
+            }
+        }
+
+        function aplicarFiltrosCnnDuplas() {
+            const search = (document.getElementById('filter-cnn-search')?.value || '').toLowerCase();
+            const dados = dadosFiltrados['cnn-duplas'];
+
+            if (!Array.isArray(dados)) {
+                dadosFiltrados['cnn-duplas'] = [];
+            } else {
+                dadosFiltrados['cnn-duplas'] = dados.filter(cnn => {
+                    if (!cnn) return false;
+                    return !search || 
+                        (cnn.codigo_cnn && cnn.codigo_cnn.toLowerCase().includes(search)) ||
+                        (cnn.nome && cnn.nome.toLowerCase().includes(search));
+                });
+            }
+
+            paginacaoAtual['cnn-duplas'].pagina = 1;
+            renderizarTabela('cnn-duplas');
+        }
+
+        function limparFiltrosCnnDuplas() {
+            document.getElementById('filter-cnn-search').value = '';
+            carregarCnnDuplas();
+        }
+
+        // ===========================
+        // TIPOS DE ATENDIMENTO
+        // ===========================
+        async function carregarTiposAtendimento() {
+            try {
+                // Verificar cache primeiro
+                let cachedTiposAtendimento = cache.get('tipos-atendimento');
+                
+                if (!cachedTiposAtendimento) {
+                    // Mostrar skeleton loaders
+                    showSkeletonTable('table-tipos-atendimento', 5, 3);
+
+                    todosTiposAtendimento = await window.pywebview.api.admin_listar_tipos_atendimento();
+                    
+                    // Cachear resultado
+                    if (todosTiposAtendimento) {
+                        cache.set('tipos-atendimento', todosTiposAtendimento, 30000);
+                    }
+                } else {
+                    todosTiposAtendimento = cachedTiposAtendimento;
+                }
+
+                if (!Array.isArray(todosTiposAtendimento)) {
+                    todosTiposAtendimento = [];
+                }
+                dadosFiltrados['tipos-atendimento'] = [...todosTiposAtendimento];
+                paginacaoAtual['tipos-atendimento'].pagina = 1;
+                renderizarTabela('tipos-atendimento');
+            } catch (error) {
+                console.error('Erro ao carregar tipos de atendimento:', error);
+                todosTiposAtendimento = [];
+                dadosFiltrados['tipos-atendimento'] = [];
+                renderizarTabela('tipos-atendimento');
+            }
+        }
+
+        function aplicarFiltrosTiposAtendimento() {
+            const search = (document.getElementById('filter-tipo-search')?.value || '').toLowerCase();
+
+            if (!Array.isArray(todosTiposAtendimento)) {
+                todosTiposAtendimento = [];
+            }
+
+            dadosFiltrados['tipos-atendimento'] = todosTiposAtendimento.filter(tipo => {
+                if (!tipo) return false;
+                return !search || (tipo.nome && tipo.nome.toLowerCase().includes(search));
+            });
+
+            paginacaoAtual['tipos-atendimento'].pagina = 1;
+            renderizarTabela('tipos-atendimento');
+        }
+
+        function limparFiltrosTiposAtendimento() {
+            document.getElementById('filter-tipo-search').value = '';
+            aplicarFiltrosTiposAtendimento();
+        }
+
+        async function abrirModalFuncionario(id = null) {
+    editandoId = id;
+
+    // Carregar setores
+    if (todosSetores.length === 0) {
+        todosSetores = await window.pywebview.api.admin_listar_setores();
+    }
+
+    let dados = { nome: '', email: '', ramal: '', setor_id: '', ativo: 1 };
+    let loginData = null;
+    
+    if (id) {
+        dados = await window.pywebview.api.admin_obter_funcionario(id);
+        // Verificar se tem login
+        try {
+            loginData = await window.pywebview.api.admin_obter_login_por_funcionario(id);
+        } catch (error) {
+        }
+    }
+
+    const temLogin = loginData !== null;
+    const loginHTML = `
+        <hr style="margin: 24px 0; border: none; border-top: 1px solid var(--glass-border);">
+        <h3 style="margin-bottom: 16px; color: var(--blue-deep);">
+            ${temLogin ? 'Login do Funcionário' : 'Criar Login'}
+        </h3>
+        
+        ${!temLogin ? `
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="func-criar-login" ${!id ? 'checked' : ''}>
+                    <label for="func-criar-login">Criar login para este funcionário</label>
+                </div>
+            </div>
+        ` : ''}
+        
+        <div id="login-fields" style="${!temLogin && id ? 'display: none;' : ''}">
+            <div class="form-group">
+                <label>Usuário ${temLogin ? '' : '*'}</label>
+                <input type="text" id="func-usuario" value="${loginData ? loginData.usuario : ''}" ${temLogin ? 'readonly' : ''}>
+                ${temLogin ? '<small style="color: var(--text-muted);">Usuário não pode ser alterado</small>' : ''}
+            </div>
+            
+            <div class="form-group">
+                <label>Senha ${temLogin ? '(deixe vazio para manter)' : '*'}</label>
+                <input type="password" id="func-senha" placeholder="${temLogin ? 'Digite para alterar' : 'Digite a senha'}">
+            </div>
+            
+            <div class="form-group">
+                <label>Nível de Acesso ${temLogin ? '' : '*'}</label>
+                <select id="func-nivel">
+                    <option value="user" ${loginData && loginData.nivel === 'user' ? 'selected' : ''}>Usuário</option>
+                    <option value="admin" ${loginData && loginData.nivel === 'admin' ? 'selected' : ''}>Administrador</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="func-login-ativo" ${!loginData || loginData.ativo ? 'checked' : ''}>
+                    <label for="func-login-ativo">Login Ativo</label>
+                </div>
+            </div>
+            
+            ${temLogin ? `
+                <div style="margin-top: 16px;">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="excluirLoginFuncionario(${loginData.id})">
+                        Excluir Login
+                    </button>
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+    const modal = criarModal('Funcionário', `
+        <div class="form-group">
+            <label>Nome *</label>
+            <input type="text" id="func-nome" value="${dados.nome}" required>
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="func-email" value="${dados.email || ''}">
+        </div>
+        <div class="form-group">
+            <label>Ramal</label>
+            <input type="text" id="func-ramal" value="${dados.ramal || ''}">
+        </div>
+        <div class="form-group">
+            <label>Setor</label>
+            <select id="func-setor">
+                <option value="">Selecione...</option>
+                ${todosSetores.map(s => `<option value="${s.id}" ${s.id === dados.setor_id ? 'selected' : ''}>${s.nome}</option>`).join('')}
+            </select>
+        </div>
+        <div class="form-group">
+            <div class="checkbox-group">
+                <input type="checkbox" id="func-ativo" ${dados.ativo ? 'checked' : ''}>
+                <label for="func-ativo">Funcionário Ativo</label>
+            </div>
+        </div>
+        ${loginHTML}
+    `, salvarFuncionario);
+
+    mostrarModal(modal);
+
+    // Configurar listener do checkbox de criar login (apenas para novos sem login)
+    if (!temLogin) {
+        const checkboxLogin = document.getElementById('func-criar-login');
+        const loginFields = document.getElementById('login-fields');
+        
+        if (checkboxLogin && loginFields) {
+            checkboxLogin.addEventListener('change', function() {
+                loginFields.style.display = this.checked ? 'block' : 'none';
+            });
+        }
+    }
+}
+
+async function salvarFuncionario() {
+    if (salvandoFuncionario) {
+        return;
+    }
+
+    const nome = document.getElementById('func-nome').value;
+    const email = document.getElementById('func-email').value;
+    const ramal = document.getElementById('func-ramal').value;
+    const setor_id = document.getElementById('func-setor').value || null;
+    const ativo = document.getElementById('func-ativo').checked ? 1 : 0;
+
+    if (!nome) {
+        alert('Nome é obrigatório');
+        return;
+    }
+
+    salvandoFuncionario = true;
+
+    try {
+        let funcionario_id;
+        
+        // 1. Salvar/Atualizar funcionário
+        if (editandoId) {
+            await window.pywebview.api.admin_editar_funcionario(editandoId, nome, email, ramal, setor_id, ativo);
+            funcionario_id = editandoId;
+        } else {
+            const result = await window.pywebview.api.admin_criar_funcionario(nome, email, ramal, setor_id, ativo);
+            funcionario_id = (result && typeof result === 'object')
+                ? (result.id ?? result.funcionario_id)
+                : result;
+        }
+
+        if (!funcionario_id) {
+            throw new Error('Não foi possível identificar o funcionário salvo.');
+        }
+
+        // 2. Verificar se tem login existente
+        let loginExistente = null;
+        try {
+            loginExistente = await window.pywebview.api.admin_obter_login_por_funcionario(funcionario_id);
+        } catch (error) {
+            // Não tem login
+        }
+
+        // 3. Processar login
+        const checkboxCriar = document.getElementById('func-criar-login');
+        const deveCriarLogin = !loginExistente && (!checkboxCriar || checkboxCriar.checked);
+        const deveAtualizarLogin = loginExistente !== null;
+
+        if (deveCriarLogin || deveAtualizarLogin) {
+            const usuario = document.getElementById('func-usuario').value;
+            const senha = document.getElementById('func-senha').value;
+            const nivel = document.getElementById('func-nivel').value;
+            const loginAtivo = document.getElementById('func-login-ativo').checked ? 1 : 0;
+
+            if (deveCriarLogin) {
+                // Criar novo login
+                if (!usuario || !senha) {
+                    alert('Usuário e senha são obrigatórios para criar o login');
+                    return;
+                }
+                await window.pywebview.api.admin_criar_login(funcionario_id, usuario, senha, nivel, loginAtivo);
+                mostrarSucesso('Funcionário e login criados com sucesso!');
+            } else if (deveAtualizarLogin) {
+                // Atualizar login existente
+                await window.pywebview.api.admin_editar_login(
+                    loginExistente.id, 
+                    funcionario_id, 
+                    usuario, 
+                    senha, 
+                    nivel, 
+                    loginAtivo
+                );
+                mostrarSucesso('Funcionário e login atualizados com sucesso!');
+            }
+        } else {
+            mostrarSucesso('Funcionário salvo com sucesso!');
+        }
+        
+        fecharModal();
+        carregarFuncionarios();
+        
+    } catch (error) {
+        mostrarErro('Erro ao salvar funcionário: ' + error.message);
+    } finally {
+        salvandoFuncionario = false;
+    }
+}
+
+async function editarFuncionario(id) {
+    abrirModalFuncionario(id);
+}
+
+async function excluirFuncionario(id) {
+    if (!confirm('Deseja realmente excluir este funcionário?\n\nIsto também excluirá o login associado (se houver).')) return;
+
+    try {
+        await window.pywebview.api.admin_excluir_funcionario(id);
+        carregarFuncionarios();
+        mostrarSucesso('Funcionário excluído com sucesso!');
+    } catch (error) {
+        mostrarErro('Erro ao excluir funcionário: ' + error.message);
+    }
+}
+
+async function excluirLoginFuncionario(login_id) {
+    if (!confirm('Deseja realmente excluir o login deste funcionário?')) return;
+
+    try {
+        await window.pywebview.api.admin_excluir_login(login_id);
+        fecharModal();
+        carregarFuncionarios();
+        mostrarSucesso('Login excluído com sucesso!');
+    } catch (error) {
+        mostrarErro('Erro ao excluir login: ' + error.message);
+    }
+}
+        async function abrirModalSetor(id = null) {
+            editandoId = id;
+
+            let dados = { nome: '' };
+            if (id) {
+                dados = await window.pywebview.api.admin_obter_setor(id);
+            }
+
+            const modal = criarModal('Setor', `
+                <div class="form-group">
+                    <label>Nome do Setor *</label>
+                    <input type="text" id="setor-nome" value="${dados.nome}" required>
+                </div>
+            `, salvarSetor, '🏢');
+
+            mostrarModal(modal);
+        }
+
+        async function salvarSetor() {
+            const nome = document.getElementById('setor-nome').value;
+
+            if (!nome) {
+                alert('Nome do setor é obrigatório');
+                return;
+            }
+
+            try {
+                if (editandoId) {
+                    await window.pywebview.api.admin_editar_setor(editandoId, nome);
+                } else {
+                    await window.pywebview.api.admin_criar_setor(nome);
+                }
+                fecharModal();
+                carregarSetores();
+                mostrarSucesso('Setor salvo com sucesso!');
+            } catch (error) {
+                mostrarErro('Erro ao salvar setor: ' + error.message);
+            }
+        }
+
+        async function editarSetor(id) {
+            abrirModalSetor(id);
+        }
+
+        async function excluirSetor(id) {
+            if (!confirm('Deseja realmente excluir este setor?')) return;
+
+            try {
+                await window.pywebview.api.admin_excluir_setor(id);
+                carregarSetores();
+                mostrarSucesso('Setor excluído com sucesso!');
+            } catch (error) {
+                mostrarErro('Erro ao excluir setor: ' + error.message);
+            }
+        }
+
+        // ===========================
+        // MÉDICOS
+        // ===========================
+       async function abrirModalMedico(id = null) {
+    editandoId = id;
+
+    if (todosProcedimentos.length === 0) {
+        todosProcedimentos = await window.pywebview.api.admin_listar_procedimentos();
+    }
+
+    if (todosTiposAtendimento.length === 0) {
+        todosTiposAtendimento = await window.pywebview.api.admin_listar_tipos_atendimento();
+    }
+
+    let dados = { nome: '', crm: '', ativo: 1 };
+    let regras = {
+        imc_geral: '',
+        imc_mama_redutora: '',
+        imc_pos_bariatrica: '',
+        max_cirurgias_combinadas: '',
+        indicacao_cirurgica: 0,
+        observacoes: ''
+    };
+    let procedimentosMedico = [];
+    let agendasMedico = [];
+    
+    if (id) {
+        dados = await window.pywebview.api.admin_obter_medico(id);
+        
+        try {
+            const regrasData = await window.pywebview.api.admin_obter_medico_regras(id);
+            if (regrasData) {
+                regras = regrasData;
+            }
+        } catch (error) {
+            console.error('Erro ao carregar regras:', error);
+        }
+        
+        try {
+            procedimentosMedico = await window.pywebview.api.admin_obter_medico_procedimentos(id);
+        } catch (error) {
+            console.error('Erro ao carregar procedimentos:', error);
+        }
+        
+        try {
+            agendasMedico = await window.pywebview.api.admin_listar_agenda_medico(id);
+        } catch (error) {
+            console.error('Erro ao carregar agendas:', error);
+        }
+    }
+
+    const idsProcedimentos = procedimentosMedico.map(p => p.id);
+
+    const agendasHTML = id ? `
+        <hr style="margin: 24px 0; border: none; border-top: 1px solid var(--glass-border);">
+        <h3 style="margin-bottom: 16px; color: var(--blue-deep);">Agenda Médica</h3>
+        <div style="margin-bottom: 16px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="abrirModalAgendaDentroMedico(${id})">+ Adicionar Horário</button>
+        </div>
+        <div id="agendas-list" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--glass-border); border-radius: 10px; padding: 12px;">
+            ${agendasMedico.length === 0 ? '<p style="text-align: center; color: var(--text-muted);">Nenhum horário cadastrado</p>' : 
+                agendasMedico.map(ag => {
+                    const atendimentos = ag.atendimentos ? ag.atendimentos.map(a => a.nome).join(', ') : 'Sem tipos definidos';
+                    return `
+                        <div style="padding: 10px; margin-bottom: 10px; background: rgba(30, 58, 138, 0.05); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>${ag.dia_semana}</strong>: ${ag.hora_inicio} - ${ag.hora_fim}<br>
+                                <small style="color: var(--text-muted);">${atendimentos}</small>
+                            </div>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="excluirAgendaDentroMedico(${ag.id}, ${id})">Excluir</button>
+                        </div>
+                    `;
+                }).join('')
+            }
+        </div>
+    ` : '';
+
+    const modal = criarModal('Médico', `
+        <div class="form-group">
+            <label>Nome *</label>
+            <input type="text" id="med-nome" value="${dados.nome}" required>
+        </div>
+        <div class="form-group">
+            <label>CRM *</label>
+            <input type="text" id="med-crm" value="${dados.crm}" required>
+        </div>
+        <div class="form-group">
+            <div class="checkbox-group">
+                <input type="checkbox" id="med-ativo" ${dados.ativo ? 'checked' : ''}>
+                <label for="med-ativo">Ativo</label>
+            </div>
+        </div>
+
+        <hr style="margin: 24px 0; border: none; border-top: 1px solid var(--glass-border);">
+        <h3 style="margin-bottom: 16px; color: var(--blue-deep);">Regras Médicas</h3>
+        
+        <div class="form-group">
+            <div class="checkbox-group">
+                <input type="checkbox" id="regra-indicacao" ${regras.indicacao_cirurgica ? 'checked' : ''}>
+                <label for="regra-indicacao">Indicação Cirúrgica</label>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>IMC Geral</label>
+            <input type="number" id="regra-imc-geral" value="${regras.imc_geral || ''}" step="0.1" placeholder="Ex: 35.0">
+        </div>
+        <div class="form-group">
+            <label>IMC Mama Redutora</label>
+            <input type="number" id="regra-imc-mama" value="${regras.imc_mama_redutora || ''}" step="0.1" placeholder="Ex: 30.0">
+        </div>
+        <div class="form-group">
+            <label>IMC Pós-Bariátrica</label>
+            <input type="number" id="regra-imc-bariatrica" value="${regras.imc_pos_bariatrica || ''}" step="0.1" placeholder="Ex: 32.0">
+        </div>
+        <div class="form-group">
+            <label>Máx. Cirurgias Combinadas</label>
+            <input type="number" id="regra-max-cirurgias" value="${regras.max_cirurgias_combinadas || ''}" placeholder="Ex: 3">
+        </div>
+        
+        <div class="form-group">
+            <label>Observações</label>
+            <textarea id="regra-observacoes" rows="3" placeholder="Observações adicionais sobre as regras...">${regras.observacoes || ''}</textarea>
+        </div>
+
+        <hr style="margin: 24px 0; border: none; border-top: 1px solid var(--glass-border);">
+        <h3 style="margin-bottom: 16px; color: var(--blue-deep);">Procedimentos</h3>
+
+        <div class="multi-select" id="proc-medico-list" style="max-height: 200px; overflow-y: auto;">
+            ${todosProcedimentos.map(proc => `
+                <div class="multi-select-item">
+                    <input type="checkbox" id="proc-${proc.id}" value="${proc.id}" ${idsProcedimentos.includes(proc.id) ? 'checked' : ''}>
+                    <label for="proc-${proc.id}">${proc.nome}</label>
+                </div>
+            `).join('')}
+        </div>
+
+        ${agendasHTML}
+    `, salvarMedicoCompleto);
+
+    mostrarModal(modal);
+}
+
+        async function abrirModalAgendaDentroMedico(medico_id) {
+            const diasSemana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+            
+            const modalAgenda = criarModal('Adicionar Horário', `
+                <div class="form-group">
+                    <label>Dia da Semana *</label>
+                    <select id="agenda-dia-novo">
+                        <option value="">Selecione...</option>
+                        ${diasSemana.map(dia => `<option value="${dia}">${dia}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Hora Início *</label>
+                    <input type="time" id="agenda-inicio-novo" required>
+                </div>
+                <div class="form-group">
+                    <label>Hora Fim *</label>
+                    <input type="time" id="agenda-fim-novo" required>
+                </div>
+                <div class="form-group">
+                    <label>Tipos de Atendimento</label>
+                    <div class="multi-select" id="agenda-atendimentos-novo">
+                        ${todosTiposAtendimento.map(tipo => `
+                            <div class="multi-select-item">
+                                <input type="checkbox" id="agenda-tipo-novo-${tipo.id}" value="${tipo.id}">
+                                <label for="agenda-tipo-novo-${tipo.id}">${tipo.nome}</label>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `, async () => {
+                const dia = document.getElementById('agenda-dia-novo').value;
+                const inicio = document.getElementById('agenda-inicio-novo').value;
+                const fim = document.getElementById('agenda-fim-novo').value;
+                const checkboxes = document.querySelectorAll('#agenda-atendimentos-novo input[type="checkbox"]:checked');
+                const atendimentos = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+                if (!dia || !inicio || !fim) {
+                    alert('Preencha todos os campos obrigatórios');
+                    return;
+                }
+
+                try {
+                    await window.pywebview.api.admin_criar_agenda_medico(medico_id, dia, inicio, fim, atendimentos);
+                    fecharModal();
+                    mostrarSucesso('Horário adicionado! Feche e reabra o modal do médico para ver as alterações.');
+                } catch (error) {
+                    mostrarErro('Erro ao adicionar horário: ' + error.message);
+                }
+            });
+
+            mostrarModal(modalAgenda);
+        }
+
+        async function excluirAgendaDentroMedico(agenda_id, medico_id) {
+            if (!confirm('Deseja realmente excluir este horário?')) return;
+
+            try {
+                await window.pywebview.api.admin_excluir_agenda_medico(agenda_id);
+                mostrarSucesso('Horário excluído! Feche e reabra o modal do médico para ver as alterações.');
+            } catch (error) {
+                mostrarErro('Erro ao excluir horário: ' + error.message);
+            }
+        }
+            // ===========================
+// FUNÇÕES DE APOIO
+// ===========================
+
+// Gerenciar Regras
+async function gerenciarRegras(medico_id) {
+    try {
+        const medico = await window.pywebview.api.admin_obter_medico(medico_id);
+        const regras = await window.pywebview.api.admin_obter_medico_regras(medico_id);
+
+        const modal = criarModal(`Regras - ${medico.nome}`, `
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="regra-indicacao-modal" ${regras.indicacao_cirurgica ? 'checked' : ''}>
+                    <label for="regra-indicacao-modal">Indicação Cirúrgica</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>IMC Geral</label>
+                <input type="number" id="regra-imc-geral-modal" value="${regras.imc_geral || ''}" step="0.1" placeholder="Ex: 35.0">
+            </div>
+            
+            <div class="form-group">
+                <label>IMC Mama Redutora</label>
+                <input type="number" id="regra-imc-mama-modal" value="${regras.imc_mama_redutora || ''}" step="0.1" placeholder="Ex: 30.0">
+            </div>
+            
+            <div class="form-group">
+                <label>IMC Pós-Bariátrica</label>
+                <input type="number" id="regra-imc-bariatrica-modal" value="${regras.imc_pos_bariatrica || ''}" step="0.1" placeholder="Ex: 32.0">
+            </div>
+            
+            <div class="form-group">
+                <label>Máx. Cirurgias Combinadas</label>
+                <input type="number" id="regra-max-cirurgias-modal" value="${regras.max_cirurgias_combinadas || ''}" placeholder="Ex: 3">
+            </div>
+            
+            <div class="form-group">
+                <label>Observações</label>
+                <textarea id="regra-observacoes-modal" rows="4" placeholder="Observações adicionais sobre as regras...">${regras.observacoes || ''}</textarea>
+            </div>
+        `, async () => {
+            const imc_geral = document.getElementById('regra-imc-geral-modal').value || null;
+            const imc_mama = document.getElementById('regra-imc-mama-modal').value || null;
+            const imc_bariatrica = document.getElementById('regra-imc-bariatrica-modal').value || null;
+            const max_cirurgias = document.getElementById('regra-max-cirurgias-modal').value || null;
+            const indicacao = document.getElementById('regra-indicacao-modal').checked;
+            const observacoes = document.getElementById('regra-observacoes-modal').value;
+
+            try {
+                await window.pywebview.api.admin_salvar_medico_regras(
+                    medico_id, imc_geral, imc_mama, imc_bariatrica,
+                    max_cirurgias, indicacao, observacoes
+                );
+                fecharModal();
+                carregarMedicos();
+                mostrarSucesso('Regras salvas com sucesso!');
+            } catch (error) {
+                mostrarErro('Erro ao salvar regras: ' + error.message);
+            }
+        });
+
+        mostrarModal(modal);
+    } catch (error) {
+        mostrarErro('Erro ao carregar regras: ' + error.message);
+    }
+}
+
+// Gerenciar Procedimentos
+async function gerenciarProcedimentos(medico_id) {
+    try {
+        const medico = await window.pywebview.api.admin_obter_medico(medico_id);
+        
+        if (todosProcedimentos.length === 0) {
+            todosProcedimentos = await window.pywebview.api.admin_listar_procedimentos();
+        }
+        
+        const procedimentosMedico = await window.pywebview.api.admin_obter_medico_procedimentos(medico_id);
+        const idsSelecionados = procedimentosMedico.map(p => p.id);
+
+        const modal = criarModal(`Procedimentos - ${medico.nome}`, `
+            <p style="margin-bottom: 16px; color: var(--text-muted);">
+                Selecione os procedimentos que este médico pode realizar:
+            </p>
+            
+            <div class="multi-select" id="proc-medico-list-modal" style="max-height: 400px; overflow-y: auto;">
+                ${todosProcedimentos.map(proc => `
+                    <div class="multi-select-item">
+                        <input type="checkbox" id="proc-modal-${proc.id}" value="${proc.id}" ${idsSelecionados.includes(proc.id) ? 'checked' : ''}>
+                        <label for="proc-modal-${proc.id}">${proc.nome}</label>
+                    </div>
+                `).join('')}
+            </div>
+            
+            ${todosProcedimentos.length === 0 ? '<p style="text-align: center; color: var(--text-muted); margin-top: 20px;">Nenhum procedimento cadastrado</p>' : ''}
+        `, async () => {
+            const checkboxes = document.querySelectorAll('#proc-medico-list-modal input[type="checkbox"]:checked');
+            const procedimentos = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+            try {
+                await window.pywebview.api.admin_salvar_medico_procedimentos(medico_id, procedimentos);
+                fecharModal();
+                carregarMedicos();
+                mostrarSucesso('Procedimentos salvos com sucesso!');
+            } catch (error) {
+                mostrarErro('Erro ao salvar procedimentos: ' + error.message);
+            }
+        });
+
+        mostrarModal(modal);
+    } catch (error) {
+        mostrarErro('Erro ao carregar procedimentos: ' + error.message);
+    }
+}
+
+        async function salvarMedicoCompleto() {
+            const nome = document.getElementById('med-nome').value;
+            const crm = document.getElementById('med-crm').value;
+            const ativo = document.getElementById('med-ativo').checked ? 1 : 0;
+
+            if (!nome || !crm) {
+                alert('Nome e CRM são obrigatórios');
+                return;
+            }
+
+            try {
+                let medico_id;
+
+                // 1. Salvar dados básicos do médico
+                if (editandoId) {
+                    await window.pywebview.api.admin_editar_medico(editandoId, nome, crm, ativo);
+                    medico_id = editandoId;
+                } else {
+                    await window.pywebview.api.admin_criar_medico(nome, crm, ativo);
+                    // Buscar ID do médico recém-criado
+                    const medicos = await window.pywebview.api.admin_listar_medicos();
+                    const medCriado = medicos.find(m => m.nome === nome && m.crm === crm);
+                    medico_id = medCriado.id;
+                }
+
+                // 2. Salvar regras
+                const imc_geral = document.getElementById('regra-imc-geral').value || null;
+                const imc_mama = document.getElementById('regra-imc-mama').value || null;
+                const imc_bariatrica = document.getElementById('regra-imc-bariatrica').value || null;
+                const max_cirurgias = document.getElementById('regra-max-cirurgias').value || null;
+                const indicacao = document.getElementById('regra-indicacao').value;
+                const observacoes = document.getElementById('regra-observacoes').value;
+
+                await window.pywebview.api.admin_salvar_medico_regras(
+                    medico_id, imc_geral, imc_mama, imc_bariatrica,
+                    max_cirurgias, indicacao, observacoes
+                );
+
+                // 3. Salvar procedimentos
+                const checkboxes = document.querySelectorAll('#proc-medico-list input[type="checkbox"]:checked');
+                const procedimentos = Array.from(checkboxes).map(cb => parseInt(cb.value));
+                await window.pywebview.api.admin_salvar_medico_procedimentos(medico_id, procedimentos);
+
+                fecharModal();
+                carregarMedicos();
+                mostrarSucesso('Médico salvo com sucesso!');
+            } catch (error) {
+                mostrarErro('Erro ao salvar médico: ' + error.message);
+            }
+        }
+
+        async function editarMedico(id) {
+            abrirModalMedico(id);
+        }
+
+        async function excluirMedico(id) {
+            if (!confirm('Deseja realmente excluir este médico?')) return;
+
+            try {
+                await window.pywebview.api.admin_excluir_medico(id);
+                carregarMedicos();
+                mostrarSucesso('Médico excluído com sucesso!');
+            } catch (error) {
+                mostrarErro('Erro ao excluir médico: ' + error.message);
+            }
+        }
+
+        // ===========================
+        // PROCEDIMENTOS
+        // ===========================
+        async function abrirModalProcedimento(id = null) {
+            editandoId = id;
+
+            let dados = { nome: '' };
+            if (id) {
+                dados = await window.pywebview.api.admin_obter_procedimento(id);
+            }
+
+            const modal = criarModal('Procedimento', `
+                <div class="form-group">
+                    <label>Nome do Procedimento *</label>
+                    <input type="text" id="proc-nome" value="${dados.nome}" required>
+                </div>
+            `, salvarProcedimento, '💉');
+
+            mostrarModal(modal);
+        }
+
+        async function salvarProcedimento() {
+            const nome = document.getElementById('proc-nome').value;
+
+            if (!nome) {
+                alert('Nome do procedimento é obrigatório');
+                return;
+            }
+
+            try {
+                if (editandoId) {
+                    await window.pywebview.api.admin_editar_procedimento(editandoId, nome);
+                } else {
+                    await window.pywebview.api.admin_criar_procedimento(nome);
+                }
+                fecharModal();
+                carregarProcedimentos();
+                mostrarSucesso('Procedimento salvo com sucesso!');
+            } catch (error) {
+                mostrarErro('Erro ao salvar procedimento: ' + error.message);
+            }
+        }
+
+        async function editarProcedimento(id) {
+            abrirModalProcedimento(id);
+        }
+
+        async function excluirProcedimento(id) {
+            if (!confirm('Deseja realmente excluir este procedimento?')) return;
+
+            try {
+                await window.pywebview.api.admin_excluir_procedimento(id);
+                carregarProcedimentos();
+                mostrarSucesso('Procedimento excluído com sucesso!');
+            } catch (error) {
+                mostrarErro('Erro ao excluir procedimento: ' + error.message);
+            }
+        }
+
+        // ===========================
+        // CNN DUPLAS
+        // ===========================
+        async function abrirModalCnnDupla(id = null) {
+            editandoId = id;
+
+            if (todosProcedimentos.length === 0) {
+                todosProcedimentos = await window.pywebview.api.admin_listar_procedimentos();
+            }
+
+            let dados = { codigo_cnn: '', nome: '', procedimentos: [] };
+            if (id) {
+                dados = await window.pywebview.api.admin_obter_cnn_dupla(id);
+            }
+
+            const idsSelecionados = dados.procedimentos.map(p => p.id);
+
+            const modal = criarModal('CNN Dupla', `
+                <div class="form-group">
+                    <label>Código CNN *</label>
+                    <input type="text" id="cnn-codigo" value="${dados.codigo_cnn}" required>
+                </div>
+                <div class="form-group">
+                    <label>Nome *</label>
+                    <input type="text" id="cnn-nome" value="${dados.nome}" required>
+                </div>
+                <div class="form-group">
+                    <label>Procedimentos Vinculados</label>
+                    <div class="multi-select" id="cnn-procedimentos">
+                        ${todosProcedimentos.map(proc => `
+                            <div class="multi-select-item">
+                                <input type="checkbox" id="cnn-proc-${proc.id}" value="${proc.id}" ${idsSelecionados.includes(proc.id) ? 'checked' : ''}>
+                                <label for="cnn-proc-${proc.id}">${proc.nome}</label>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `, salvarCnnDupla);
+
+            mostrarModal(modal);
+        }
+
+        async function salvarCnnDupla() {
+            const codigo_cnn = document.getElementById('cnn-codigo').value;
+            const nome = document.getElementById('cnn-nome').value;
+            const checkboxes = document.querySelectorAll('#cnn-procedimentos input[type="checkbox"]:checked');
+            const procedimentos = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+            if (!codigo_cnn || !nome) {
+                alert('Código CNN e Nome são obrigatórios');
+                return;
+            }
+
+            try {
+                if (editandoId) {
+                    await window.pywebview.api.admin_editar_cnn_dupla(editandoId, codigo_cnn, nome, procedimentos);
+                } else {
+                    await window.pywebview.api.admin_criar_cnn_dupla(codigo_cnn, nome, procedimentos);
+                }
+                fecharModal();
+                carregarCnnDuplas();
+                mostrarSucesso('CNN Dupla salva com sucesso!');
+            } catch (error) {
+                mostrarErro('Erro ao salvar CNN Dupla: ' + error.message);
+            }
+        }
+
+        async function editarCnnDupla(id) {
+            abrirModalCnnDupla(id);
+        }
+
+        async function excluirCnnDupla(id) {
+            if (!confirm('Deseja realmente excluir esta CNN dupla?')) return;
+
+            try {
+                await window.pywebview.api.admin_excluir_cnn_dupla(id);
+                carregarCnnDuplas();
+                mostrarSucesso('CNN Dupla excluída com sucesso!');
+            } catch (error) {
+                mostrarErro('Erro ao excluir CNN Dupla: ' + error.message);
+            }
+        }
+
+        // ===========================
+        // TIPOS DE ATENDIMENTO
+        // ===========================
+        async function abrirModalTipoAtendimento(id = null) {
+            editandoId = id;
+
+            let dados = { nome: '' };
+            if (id) {
+                dados = await window.pywebview.api.admin_obter_tipo_atendimento(id);
+            }
+
+            const modal = criarModal('Tipo de Atendimento', `
+                <div class="form-group">
+                    <label>Nome *</label>
+                    <input type="text" id="tipo-nome" value="${dados.nome}" required>
+                </div>
+            `, salvarTipoAtendimento);
+
+            mostrarModal(modal);
+        }
+
+        async function salvarTipoAtendimento() {
+            const nome = document.getElementById('tipo-nome').value;
+
+            if (!nome) {
+                alert('Nome é obrigatório');
+                return;
+            }
+
+            try {
+                if (editandoId) {
+                    await window.pywebview.api.admin_editar_tipo_atendimento(editandoId, nome);
+                } else {
+                    await window.pywebview.api.admin_criar_tipo_atendimento(nome);
+                }
+                fecharModal();
+                carregarTiposAtendimento();
+                mostrarSucesso('Tipo de atendimento salvo com sucesso!');
+            } catch (error) {
+                mostrarErro('Erro ao salvar tipo de atendimento: ' + error.message);
+            }
+        }
+
+        async function editarTipoAtendimento(id) {
+            abrirModalTipoAtendimento(id);
+        }
+
+        async function excluirTipoAtendimento(id) {
+            if (!confirm('Deseja realmente excluir este tipo de atendimento?')) return;
+
+            try {
+                await window.pywebview.api.admin_excluir_tipo_atendimento(id);
+                carregarTiposAtendimento();
+                mostrarSucesso('Tipo de atendimento excluído com sucesso!');
+            } catch (error) {
+                mostrarErro('Erro ao excluir tipo de atendimento: ' + error.message);
+            }
+        }
+
+        // ===========================
+        // LOGINS
+        // ===========================
+        async function carregarLogins() {
+            try {
+                const dados = await window.pywebview.api.admin_listar_logins();
+                const tbody = document.querySelector('#table-logins tbody');
+                
+                if (dados.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><div class="empty-state-icon">🔐</div><div>Nenhum login cadastrado</div></td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = dados.map(login => {
+                    const data = new Date(login.criado_em);
+                    const dataFormatada = data.toLocaleDateString('pt-BR');
+                    return `
+                        <tr>
+                            <td>${login.funcionario_nome}</td>
+                            <td>${login.usuario}</td>
+                            <td><span class="status-badge ${login.nivel === 'admin' ? 'status-ativo' : 'status-inativo'}">${login.nivel}</span></td>
+                            <td><span class="status-badge ${login.ativo ? 'status-ativo' : 'status-inativo'}">${login.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                            <td>${dataFormatada}</td>
+                            <td class="actions-cell">
+                                <div class="table-actions">
+                                    <button class="btn btn-warning btn-sm" onclick="editarLogin(${login.id})">Editar</button>
+                                    <button class="btn btn-danger btn-sm" onclick="excluirLogin(${login.id})">Excluir</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Erro ao carregar logins:', error);
+            }
+        }
+
+        async function abrirModalLogin(id = null) {
+            editandoId = id;
+
+            if (todosFuncionarios.length === 0) {
+                todosFuncionarios = await window.pywebview.api.admin_listar_funcionarios();
+            }
+
+            let dados = { funcionario_id: '', usuario: '', nivel: 'user', ativo: 1 };
+            if (id) {
+                dados = await window.pywebview.api.admin_obter_login(id);
+            }
+
+            const modal = criarModal('Login', `
+                <div class="form-group">
+                    <label>Funcionário *</label>
+                    <select id="login-funcionario">
+                        <option value="">Selecione...</option>
+                        ${todosFuncionarios.filter(f => f.ativo).map(f => `<option value="${f.id}" ${f.id === dados.funcionario_id ? 'selected' : ''}>${f.nome}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Usuário *</label>
+                    <input type="text" id="login-usuario" value="${dados.usuario}" required>
+                </div>
+                <div class="form-group">
+                    <label>Senha ${id ? '(deixe em branco para manter a atual)' : '*'}</label>
+                    <input type="password" id="login-senha" ${!id ? 'required' : ''}>
+                </div>
+                <div class="form-group">
+                    <label>Nível *</label>
+                    <select id="login-nivel">
+                        <option value="user" ${dados.nivel === 'user' ? 'selected' : ''}>Usuário</option>
+                        <option value="admin" ${dados.nivel === 'admin' ? 'selected' : ''}>Administrador</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="login-ativo" ${dados.ativo ? 'checked' : ''}>
+                        <label for="login-ativo">Ativo</label>
+                    </div>
+                </div>
+            `, salvarLogin);
+
+            mostrarModal(modal);
+        }
+
+        async function salvarLogin() {
+            const funcionario_id = document.getElementById('login-funcionario').value;
+            const usuario = document.getElementById('login-usuario').value;
+            const senha = document.getElementById('login-senha').value;
+            const nivel = document.getElementById('login-nivel').value;
+            const ativo = document.getElementById('login-ativo').checked ? 1 : 0;
+
+            if (!funcionario_id || !usuario || (!editandoId && !senha)) {
+                alert('Preencha todos os campos obrigatórios');
+                return;
+            }
+
+            try {
+                if (editandoId) {
+                    await window.pywebview.api.admin_editar_login(editandoId, funcionario_id, usuario, senha, nivel, ativo);
+                } else {
+                    await window.pywebview.api.admin_criar_login(funcionario_id, usuario, senha, nivel, ativo);
+                }
+                fecharModal();
+                carregarLogins();
+                mostrarSucesso('Login salvo com sucesso!');
+            } catch (error) {
+                mostrarErro('Erro ao salvar login: ' + error.message);
+            }
+        }
+
+        async function editarLogin(id) {
+            abrirModalLogin(id);
+        }
+
+        async function excluirLogin(id) {
+            if (!confirm('Deseja realmente excluir este login?')) return;
+
+            try {
+                await window.pywebview.api.admin_excluir_login(id);
+                carregarLogins();
+                mostrarSucesso('Login excluído com sucesso!');
+            } catch (error) {
+                mostrarErro('Erro ao excluir login: ' + error.message);
+            }
+        }
+        // ===========================
+        // UTILS - MODAL
+        // ===========================
+        function criarModal(titulo, conteudo, onSave, icon = '📋') {
+            currentSaveHandler = onSave;
+            return `
+                <div class="modal active" id="modal-geral">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <div class="modal-header-icon">${icon}</div>
+                            <h2>${titulo}</h2>
+                        </div>
+                        <div class="modal-body">
+                            ${conteudo}
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
+                            <button class="btn btn-success" onclick="handleSave()">Salvar</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function mostrarModal(html) {
+            document.getElementById('modal-container').innerHTML = html;
+        }
+
+        function fecharModal() {
+            document.getElementById('modal-container').innerHTML = '';
+            currentSaveHandler = null;
+        }
+
+        function handleSave() {
+            if (currentSaveHandler) {
+                currentSaveHandler();
+            }
+        }
+
+        // ===========================
+        // UTILS - MENSAGENS
+        // ===========================
+        function mostrarSucesso(msg) {
+            const div = document.createElement('div');
+            div.className = 'success-message';
+            div.textContent = msg;
+            div.style.position = 'fixed';
+            div.style.top = '90px';
+            div.style.right = '20px';
+            div.style.zIndex = '10000';
+            div.style.minWidth = '300px';
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 3000);
+        }
+
+        function mostrarErro(msg) {
+            const div = document.createElement('div');
+            div.className = 'error-message';
+            div.innerHTML = `<span>${msg}</span>`;
+            div.style.position = 'fixed';
+            div.style.top = '96px';
+            div.style.right = '20px';
+            div.style.zIndex = '10000';
+            div.style.minWidth = '320px';
+            document.body.appendChild(div);
+            
+            // Detectar sessão expirada
+            if (msg && (msg.includes('sessão') || msg.includes('401') || msg.includes('Faca login') || msg.includes('não autorizado'))) {
+                console.log('Sessão expirada detectada no painel admin');
+                setTimeout(() => {
+                    try {
+                        window.pywebview.api.logout();
+                    } catch (e) {
+                        console.error('Erro ao fazer logout:', e);
+                        window.location.reload();
+                    }
+                }, 2000);
+            }
+            
+            setTimeout(() => div.remove(), 5000);
+        }
+
+        function setGlobalLoading(ativo, texto = null) {
+            const el = document.getElementById('global-loading');
+            if (!el) return;
+            const label = el.querySelector('.label');
+            if (label && texto) label.textContent = texto;
+            el.classList.toggle('active', !!ativo);
+        }
+
+        // ===========================
+        // MENU ADMIN
+        // ===========================
+        function abrirMenuAdmin() {
+            console.log('Menu admin clicado');
+            // Pode ser expandido para mostrar mais opções no futuro
+        }
+
+        // ===========================
+        // ATUALIZAR SEÇÃO NA TOP BAR
+        // ===========================
+        function atualizarIconeSecao(section) {
+            const icones = {
+                'dashboard': '📊',
+                'funcionarios': '👥',
+                'setores': '🏢',
+                'medicos': '👨‍⚕️',
+                'procedimentos': '💉',
+                'cnn-duplas': '🔗',
+                'tipos-atendimento': '🏥'
+            };
+            const topBarIcon = document.getElementById('top-bar-section-icon');
+            if (topBarIcon) {
+                topBarIcon.textContent = icones[section] || '📊';
+            }
+        }
+
+        // ===========================
+        // INICIALIZAR LISTENERS DE FILTRO COM DEBOUNCE
+        // ===========================
+        function inicializarListenersFiltros() {
+            // Criar versões debounced dos aplicadores de filtro
+            const aplicarFiltrosFuncionariosDeb = debounce(aplicarFiltrosFuncionarios, 250);
+            const aplicarFiltrosSetoresDeb = debounce(aplicarFiltrosSetores, 250);
+            const aplicarFiltrosMedicosDeb = debounce(aplicarFiltrosMedicos, 250);
+            const aplicarFiltrosProcedimentosDeb = debounce(aplicarFiltrosProcedimentos, 250);
+            const aplicarFiltrosCnnDuplasDeb = debounce(aplicarFiltrosCnnDuplas, 250);
+            const aplicarFiltrosTiposAtendimentoDeb = debounce(aplicarFiltrosTiposAtendimento, 250);
+
+            // Atrelar funcionários
+            ['filter-func-search', 'filter-func-setor', 'filter-func-status', 'filter-func-login'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('change', aplicarFiltrosFuncionariosDeb);
+                    el.addEventListener('input', aplicarFiltrosFuncionariosDeb);
+                }
+            });
+
+            // Atrelar setores
+            ['filter-setor-search'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('change', aplicarFiltrosSetoresDeb);
+                    el.addEventListener('input', aplicarFiltrosSetoresDeb);
+                }
+            });
+
+            // Atrelar médicos
+            ['filter-med-search', 'filter-med-status'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('change', aplicarFiltrosMedicosDeb);
+                    el.addEventListener('input', aplicarFiltrosMedicosDeb);
+                }
+            });
+
+            // Atrelar procedimentos
+            ['filter-proc-search'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('change', aplicarFiltrosProcedimentosDeb);
+                    el.addEventListener('input', aplicarFiltrosProcedimentosDeb);
+                }
+            });
+
+            // Atrelar CNN duplas
+            ['filter-cnn-search'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('change', aplicarFiltrosCnnDuplasDeb);
+                    el.addEventListener('input', aplicarFiltrosCnnDuplasDeb);
+                }
+            });
+
+            // Atrelar tipos atendimento
+            ['filter-tipo-search'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('change', aplicarFiltrosTiposAtendimentoDeb);
+                    el.addEventListener('input', aplicarFiltrosTiposAtendimentoDeb);
+                }
+            });
+        }
+
+        // ===========================
+        // INICIALIZACAO
+        // ===========================
+        window.addEventListener('pywebviewready', function() {
+            try {
+                // Garantir que todas as estruturas globais existem
+                if (!currentSection) currentSection = 'dashboard';
+                if (!editandoId) editandoId = null;
+                if (!dadosFiltrados) {
+                    dadosFiltrados = {
+                        funcionarios: [],
+                        setores: [],
+                        medicos: [],
+                        procedimentos: [],
+                        'cnn-duplas': [],
+                        'tipos-atendimento': []
+                    };
+                }
+                if (!paginacaoAtual) {
+                    paginacaoAtual = {
+                        funcionarios: { pagina: 1, porPagina: 25 },
+                        setores: { pagina: 1, porPagina: 25 },
+                        medicos: { pagina: 1, porPagina: 25 },
+                        procedimentos: { pagina: 1, porPagina: 25 },
+                        'cnn-duplas': { pagina: 1, porPagina: 25 },
+                        'tipos-atendimento': { pagina: 1, porPagina: 25 }
+                    };
+                }
+
+                setGlobalLoading(true, 'Carregando painel...');
+                const loadingTimeout = setTimeout(() => {
+                    setGlobalLoading(false);
+                    mostrarErro('Carregamento demorando. Você ainda pode navegar pelas seções.');
+                }, 12000);
+
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        // Inicializar listeners de filtros com debounce
+                        inicializarListenersFiltros();
+                        
+                        // Carregar dados com segurança
+                        carregarDados('dashboard').catch(err => {
+                            console.error('Erro crítico ao inicializar:', err);
+                            const container = document.getElementById('stats-dashboard');
+                            if (container) {
+                                container.innerHTML = '<div class="error-message">Erro ao carregar o painel. Por favor, recarregue a página.</div>';
+                            }
+                        }).finally(() => {
+                            clearTimeout(loadingTimeout);
+                            setGlobalLoading(false);
+                        });
+                    }, 0);
+                });
+            } catch (err) {
+                console.error('Erro na inicialização:', err);
+                setGlobalLoading(false);
+            }
+        });
+    </script>
+</body>
+</html>
+
+
