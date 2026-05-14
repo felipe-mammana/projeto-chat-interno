@@ -2,7 +2,6 @@ from queries import *
 import re
 import unicodedata
 from rapidfuzz import fuzz
-from functools import lru_cache
 
 
 estado = {

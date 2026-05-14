@@ -725,6 +725,38 @@ class AdminAPI:
     # =========================
     # LOGINS (FUNÇÕES AUXILIARES)
     # =========================
+    def admin_listar_logins(self):
+        """Lista logins com dados basicos do funcionario vinculado"""
+        conn = get_conn()
+        cur = conn.cursor(dictionary=True)
+
+        cur.execute("""
+            SELECT l.id, l.funcionario_id, l.usuario, l.nivel, l.ativo,
+                   f.nome AS funcionario
+            FROM logins l
+            LEFT JOIN funcionarios f ON f.id = l.funcionario_id
+            ORDER BY l.usuario
+        """)
+
+        logins = cur.fetchall()
+        conn.close()
+        return logins
+
+    def admin_obter_login(self, id):
+        """Obtem um login por ID sem expor o hash da senha"""
+        conn = get_conn()
+        cur = conn.cursor(dictionary=True)
+
+        cur.execute("""
+            SELECT id, funcionario_id, usuario, nivel, ativo
+            FROM logins
+            WHERE id = %s
+        """, (id,))
+
+        login = cur.fetchone()
+        conn.close()
+        return login
+
     def admin_obter_login_por_funcionario(self, funcionario_id):
         """Obtém login de um funcionário específico"""
         conn = get_conn()

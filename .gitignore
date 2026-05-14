@@ -1,6 +1,11 @@
 .venv/
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
 build/
 dist/
@@ -22,3 +27,6 @@ dist/
 
 config.json
 session.json
+db_backups/
+.vscode/
+.idea/

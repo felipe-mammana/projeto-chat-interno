@@ -2,12 +2,17 @@
 import logging
 import os
 import secrets
+import sys
 from dataclasses import dataclass
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
+
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
 from admin_api import AdminAPI
 from app import responder

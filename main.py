@@ -1,5 +1,3 @@
-﻿from unittest import result
-
 import webview as web
 import time
 import threading
